@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Eadid Social Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Link Style Css -->
+  <link rel="stylesheet" href="style.css">
+  <link rel="shortcut icon" href="images/eadid_logo.ico" type="image/x-icon">
+  <!-- Google Fonts & Remix Icon -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
+  <!-- Firebase SDKs (compat versions) -->
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-storage-compat.js"></script>
+</head>
+<body>
+  <!-- Titlebar -->
+  <div class="titlebar">
+    <div class="title">Eadid Social Manager</div>
+    <div class="window-controls">
+      <button class="window-control-btn" id="minimizeBtn"><i class="ri-subtract-fill"></i></button>
+      <button class="window-control-btn" id="maximizeBtn"><i class="ri-fullscreen-exit-fill"></i></button>
+      <button class="window-control-btn close-btn" id="closeBtn"><i class="ri-close-fill"></i></button>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="forum-btn" id="forumBtn">
+        <i class="ri-chat-3-line"></i>
+        <span>Forum</span>
+      </div>
+      <div class="chat-btn" id="chatBtn" style="background: #2fa7d9;">
+        <i class="ri-message-3-line"></i>
+        <span>Chat</span>
+      </div>
+      <div class="dashboard-btn" id="dashboardBtn" style="background: #a07df0;">
+        <i class="ri-dashboard-line"></i>
+        <span>Dashboard</span>
+      </div>
+      <div class="about_eadid" id="aboutBtn">
+        <i class="ri-settings-line"></i>
+        <span>About Eadid</span>
+      </div>
+      <div class="latest_updates" id="updatesBtn">
+        <i class="ri-notification-3-line"></i>
+        <span>Latest Updates</span>
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content">
+      <img src="images/back.png" alt="Background">
+      <p>Select a messenger from the sidebar.</p>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal-content">
+      <h2>Login</h2>
+      <div class="login-form">
+        <input type="email" id="loginEmail" placeholder="Email">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button id="loginBtn">Login</button>
+        <button id="signupBtn">Sign Up</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard Modal (User Info & Profile Pic Upload) -->
+  <div class="modal-overlay" id="dashboardModal">
+    <div class="modal-content">
+      <button class="modal-close" id="closeDashboardModal"><i class="ri-close-fill"></i></button>
+      <h2>Dashboard</h2>
+      <img id="profilePic" class="profile-pic" src="images/default-profile.png" alt="Profile Picture">
+      <p>Username: <span id="dashboardUsername"></span></p>
+      <p>Email: <span id="dashboardEmail"></span></p>
+      <p>Password: <i class="ri-lock-fill"></i></p>
+      <p>Credits: <span id="dashboardCredits"></span></p>
+      <label class="custom-file-upload">
+        <input type="file" id="profilePicInput" accept="image/*">
+        Upload
+      </label>
+      <button id="uploadPicBtn">Upload Profile Pic</button>
+      <button id="logoutBtn">Logout</button>
+    </div>
+  </div>
+
+  <!-- About Modal -->
+  <div class="modal-overlay" id="aboutModal">
+    <div class="modal-content">
+      <button class="modal-close" id="closeAboutModal"><i class="ri-close-fill"></i></button>
+      <h2>About Eadid</h2>
+      <p>
+        Eadid Social Manager brings your social platforms into one sleek interface.
+        Inspired by Kali Linux aesthetics, it features a dark, customizable UI with integration for popular services.
+      </p>
+      <p>Contact Us:</p>
+      <ul>
+        <li>Instagram: <a href="https://www.instagram.com/taha_code001/" target="_blank" style="color: var(--accent-green);">taha_code001</a></li>
+        <li>Facebook: <a href="https://www.facebook.com/profile.php?id=61570501762322" target="_blank" style="color: var(--accent-green);">Taha Ale</a></li>
+        <li>Email: devfreelancer51@gmail.com</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Updates Modal -->
+  <div class="modal-overlay" id="updatesModal">
+    <div class="modal-content">
+      <button class="modal-close" id="closeUpdatesModal"><i class="ri-close-fill"></i></button>
+      <h2>Latest Updates</h2>
+      <ul class="updates-list" id="updatesList"></ul>
+    </div>
+  </div>
+
+  <!-- Forum Modal -->
+  <div class="modal-overlay" id="forumModal">
+    <div class="modal-content">
+      <button class="modal-close" id="closeForumModal"><i class="ri-close-fill"></i></button>
+      <h2>Forum</h2>
+      <div class="forum-form">
+        <textarea id="forumInput" placeholder="Share your thoughts..." required></textarea>
+        <button id="forumSubmit">Post</button>
+      </div>
+      <div class="forum-posts" id="forumPosts"></div>
+    </div>
+  </div>
+
+  <!-- Chat Modal -->
+  <div class="modal-overlay" id="chatModal">
+    <div class="modal-content">
+      <button class="modal-close" id="closeChatModal"><i class="ri-close-fill"></i></button>
+      <h2>Live Chat</h2>
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-form">
+        <input type="text" id="chatInput" placeholder="Type a message...">
+        <button id="chatSendBtn">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main JavaScript -->
+  <script>
+    // ===================== FIREBASE CONFIG =====================
+    const firebaseConfig = {
+      // Replace these with your Firebase project config values
+      apiKey: "AIzaSyA1kGDOAuQRqdgXHX3Ugjj_zL7_bqYXos0",
+      authDomain: "myapp-3a874.firebaseapp.com",
+      projectId: "myapp-3a874",
+      storageBucket: "myapp-3a874.appspot.com",
+      messagingSenderId: "430236087961",
+      appId: "1:430236087961:web:d7b0e75c6cf2498c9b6a08"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const firestore = firebase.firestore();
+    const auth = firebase.auth();
+    const storage = firebase.storage();
+
+    // ===================== AUTH STATE =====================
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById("loginModal").style.display = "none";
+        // Update dashboard profile pic if available
+        if (user.photoURL) {
+          document.getElementById("profilePic").src = user.photoURL;
+        }
+      } else {
+        document.getElementById("loginModal").style.display = "flex";
+      }
+    });
+
+    // ===================== LOGIN / SIGNUP =====================
+    const loginBtn = document.getElementById('loginBtn');
+    const signupBtn = document.getElementById('signupBtn');
+    const loginEmail = document.getElementById('loginEmail');
+    const loginPassword = document.getElementById('loginPassword');
+
+    loginBtn.addEventListener('click', () => {
+      const email = loginEmail.value.trim();
+      const password = loginPassword.value.trim();
+      if (email && password) {
+        auth.signInWithEmailAndPassword(email, password)
+          .then(() => document.getElementById("loginModal").style.display = "none")
+          .catch(err => alert(`Login Error: ${err.code} - ${err.message}`));
+      }
+    });
+
+    signupBtn.addEventListener('click', () => {
+      const email = loginEmail.value.trim();
+      const password = loginPassword.value.trim();
+      if (email && password) {
+        auth.createUserWithEmailAndPassword(email, password)
+          .then(userCredential => {
+            const user = userCredential.user;
+            return user.updateProfile({ displayName: email.split('@')[0] });
+          })
+          .then(() => document.getElementById("loginModal").style.display = "none")
+          .catch(err => alert(`Signup Error: ${err.code} - ${err.message}`));
+      }
+    });
+
+    // ===================== WINDOW CONTROLS (via preload) =====================
+    const minimizeBtn = document.getElementById('minimizeBtn');
+    const maximizeBtn = document.getElementById('maximizeBtn');
+    const closeBtn = document.getElementById('closeBtn');
+    minimizeBtn.addEventListener('click', () => window.windowControls.minimize());
+    maximizeBtn.addEventListener('click', () => window.windowControls.maximize());
+    closeBtn.addEventListener('click', () => window.windowControls.close());
+
+    // ===================== ABOUT MODAL =====================
+    const aboutBtn = document.getElementById('aboutBtn');
+    const aboutModal = document.getElementById('aboutModal');
+    const closeAboutModal = document.getElementById('closeAboutModal');
+    aboutBtn.addEventListener('click', () => aboutModal.style.display = 'flex');
+    closeAboutModal.addEventListener('click', () => aboutModal.style.display = 'none');
+    aboutModal.addEventListener('click', (e) => { if (e.target === aboutModal) aboutModal.style.display = 'none'; });
+
+    // ===================== UPDATES MODAL =====================
+    const updatesBtn = document.getElementById('updatesBtn');
+    const updatesModal = document.getElementById('updatesModal');
+    const closeUpdatesModal = document.getElementById('closeUpdatesModal');
+    const updatesList = document.getElementById('updatesList');
+    let updatesSocket = null;
+    function openUpdatesModal() {
+      updatesModal.style.display = 'flex';
+      if (!updatesSocket) {
+        updatesSocket = new WebSocket("wss://echo.websocket.org/updates");
+        updatesSocket.onopen = () => console.log("WebSocket connected.");
+        updatesSocket.onmessage = (e) => {
+          if (e.data.startsWith("Request served by")) return;
+          const li = document.createElement('li');
+          li.textContent = e.data;
+          updatesList.appendChild(li);
+          // Notification sound removed.
+        };
+        updatesSocket.onerror = (err) => console.error("WebSocket Error:", err);
+        updatesSocket.onclose = () => { console.log("WebSocket closed."); updatesSocket = null; };
+      }
+    }
+    function closeUpdatesModalFunc() { updatesModal.style.display = 'none'; }
+    updatesBtn.addEventListener('click', openUpdatesModal);
+    closeUpdatesModal.addEventListener('click', closeUpdatesModalFunc);
+    updatesModal.addEventListener('click', (e) => { if (e.target === updatesModal) closeUpdatesModalFunc(); });
+
+    // ===================== DASHBOARD MODAL =====================
+    const dashboardBtn = document.getElementById('dashboardBtn');
+    const dashboardModal = document.getElementById('dashboardModal');
+    const closeDashboardModal = document.getElementById('closeDashboardModal');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const dashboardUsername = document.getElementById('dashboardUsername');
+    const dashboardEmail = document.getElementById('dashboardEmail');
+    const dashboardCreditsSpan = document.getElementById('dashboardCredits');
+    dashboardBtn.addEventListener('click', async () => {
+      const user = firebase.auth().currentUser;
+      if (user) {
+        dashboardUsername.textContent = user.displayName || user.email.split('@')[0] || "Anonymous";
+        dashboardEmail.textContent = user.email;
+        const userKey = user.displayName || user.email.split('@')[0];
+        if (userKey) {
+          const docRef = firestore.collection("users").doc(userKey);
+          const docSnap = await docRef.get();
+          dashboardCreditsSpan.textContent = docSnap.exists ? (docSnap.data().credits || 0) : 0;
+        } else {
+          dashboardCreditsSpan.textContent = 0;
+        }
+      }
+      dashboardModal.style.display = 'flex';
+    });
+    closeDashboardModal.addEventListener('click', () => dashboardModal.style.display = 'none');
+    logoutBtn.addEventListener('click', () => {
+      auth.signOut().then(() => dashboardModal.style.display = 'none');
+    });
+
+    // ===================== PROFILE PICTURE UPLOAD =====================
+    const profilePicInput = document.getElementById('profilePicInput');
+    const uploadPicBtn = document.getElementById('uploadPicBtn');
+    const profilePicImg = document.getElementById('profilePic');
+    uploadPicBtn.addEventListener('click', () => {
+      const file = profilePicInput.files[0];
+      if (!file) { alert("Please select an image file."); return; }
+      const user = firebase.auth().currentUser;
+      if (!user) { alert("You must be logged in to upload a profile picture."); return; }
+      const storageRef = firebase.storage().ref();
+      const fileRef = storageRef.child(`profile_pics/${user.uid}_${file.name}`);
+      fileRef.put(file).then(snapshot => snapshot.ref.getDownloadURL())
+        .then(url => {
+          return user.updateProfile({ photoURL: url }).then(() => {
+            profilePicImg.src = url;
+            alert("Profile picture updated.");
+          });
+        }).catch(err => {
+          console.error("Error uploading profile picture:", err);
+          alert("Error uploading profile picture.");
+        });
+    });
+
+    function linkify(text) {
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      return text.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
+    }
+
+    // ===================== FORUM MODAL =====================
+    const forumBtn = document.getElementById('forumBtn');
+    const forumModal = document.getElementById('forumModal');
+    const closeForumModal = document.getElementById('closeForumModal');
+    const forumInput = document.getElementById('forumInput');
+    const forumSubmit = document.getElementById('forumSubmit');
+    const forumPosts = document.getElementById('forumPosts');
+
+    forumBtn.addEventListener('click', () => forumModal.style.display = 'flex');
+    closeForumModal.addEventListener('click', () => forumModal.style.display = 'none');
+    forumModal.addEventListener('click', (e) => { if (e.target === forumModal) forumModal.style.display = 'none'; });
+      
+    forumSubmit.addEventListener('click', () => {
+      const text = forumInput.value.trim();
+      const user = firebase.auth().currentUser;
+      const userName = user ? (user.displayName || user.email.split('@')[0]) : "Anonymous";
+      if (!text) return;
+      firebase.firestore().collection("forumPosts").add({
+        userName,
+        text,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        time: new Date().toLocaleDateString()  // Only the date is stored
+      }).then(() => {
+        forumInput.value = "";
+        // Award 1 credit for forum posting
+        firebase.firestore().collection("users").doc(userName).set({
+          credits: firebase.firestore.FieldValue.increment(1)
+        }, { merge: true });
+      }).catch(err => console.error("Error posting to forum:", err));
+    });
+
+    firebase.firestore().collection("forumPosts").orderBy("timestamp", "desc")
+      .onSnapshot(snapshot => {
+        forumPosts.innerHTML = "";
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          appendForumPost(data);
+        });
+      });
+
+    function appendForumPost(post) {
+      const div = document.createElement('div');
+      div.className = 'forum-post';
+      // Use linkify to convert URLs in the post text to clickable links.
+      const linkedText = linkify(post.text);
+      div.innerHTML = `<strong style='font-size: 13px;'>${post.userName || "Anonymous"}</strong> <em style='font-size: 12px; position: absolute; top: 5px; left: 5px;'>(${post.time || "Just now"})</em>`;
+      forumPosts.appendChild(div).classList.add('forum-post-div');
+      const p = document.createElement('p');
+      p.innerHTML = linkedText;
+      p.style.fontSize = '14px';
+      div.appendChild(p);
+    }
+
+    // ===================== CHAT MODAL =====================
+    const chatBtn = document.getElementById('chatBtn');
+    const chatModal = document.getElementById('chatModal');
+    const closeChatModal = document.getElementById('closeChatModal');
+    const chatMessagesDiv = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const chatSendBtn = document.getElementById('chatSendBtn');
+
+    chatBtn.addEventListener('click', () => chatModal.style.display = 'flex');
+    closeChatModal.addEventListener('click', () => chatModal.style.display = 'none');
+    chatModal.addEventListener('click', (e) => { if (e.target === chatModal) chatModal.style.display = 'none'; });
+
+    chatSendBtn.addEventListener('click', () => {
+      const messageText = chatInput.value.trim();
+      if (!messageText) return;
+      const user = firebase.auth().currentUser;
+      // Use the authenticated user's display name if available; otherwise default to "Guest"
+      const userName = user ? (user.displayName || user.email.split('@')[0]) : "Guest";
+      const photoURL = user ? user.photoURL || "" : "";
+      firebase.firestore().collection("chats").add({
+        userName,
+        text: messageText,
+        photoURL,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => chatInput.value = "")
+        .catch(err => console.error("Error sending chat message:", err));
+    });
+
+    firebase.firestore().collection("chats").orderBy("timestamp", "asc")
+      .onSnapshot(snapshot => {
+        chatMessagesDiv.innerHTML = "";
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const msgDiv = document.createElement('div');
+          msgDiv.className = "chat-message";
+          const picHTML = data.photoURL ? `<img src="${data.photoURL}" alt="Profile" class="chat-pic">` : "";
+          // Apply linkify to chat message text as well.
+          const linkedMessage = linkify(data.text);
+          msgDiv.innerHTML = `${picHTML}<strong>${data.userName}:</strong> ${linkedMessage}`;
+          chatMessagesDiv.appendChild(msgDiv);
+        });
+        chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+      });
+  </script>
+</body>
+</html>
