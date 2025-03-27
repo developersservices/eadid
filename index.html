@@ -18,284 +18,415 @@
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-storage-compat.js"></script>
   <style>
     :root {
-  --bg-dark: #1b1b1b;
-  --bg-darker: #121212;
-  --text-light: #e0e0e0;
-  --accent-green: #66ff66;
-  --titlebar-bg: linear-gradient(135deg, #181818, #141414);
-  --sidebar-bg: #2d2d2d;
-  --nav-bg: #3b3b3b;
-  --nav-hover: #4a4a4a;
-  --border-color: #444;
-}
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html, body {
-  width: 100%; height: 100%;
-  background: var(--bg-dark);
-  color: var(--text-light);
-  font-family: 'Roboto', sans-serif;
-  overflow: hidden;
-}
-.titlebar {
-  height: 35px;
-  background: var(--titlebar-bg);
-  -webkit-app-region: drag;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 12px;
-  border-bottom: 1px solid var(--border-color);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-}
-.titlebar .title {
-  font-size: 16px;
-  font-weight: bold;
-  color: var(--accent-green);
-}
-.window-controls {
-  display: flex;
-  -webkit-app-region: no-drag;
-}
-.window-control-btn {
-  width: 40px; height: 35px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  color: var(--text-light);
-  font-size: 14px;
-  transition: background 0.2s ease;
-}
-.window-control-btn:hover { background: rgba(255,255,255,0.1); }
-.close-btn:hover { background: #c0392b; }
-
-.container {
-  height: calc(100% - 35px);
-  display: flex;
-}
-.sidebar {
-  position: fixed;
-  top: 35px;
-  left: 0;
-  width: 80px;
-  height: calc(100vh - 35px);
-  background: var(--sidebar-bg);
-  padding-top: 15px;
-  overflow-y: auto;
-  z-index: 1000;
-  transition: width 0.3s ease;
-  border-right: 1px solid var(--border-color);
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-color) var(--sidebar-bg);
-}
-.sidebar:hover { width: 220px; }
-.sidebar div {
-  width: 60px; height: 60px;
-  background: var(--nav-bg);
-  margin: 15px auto;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.3s ease, width 0.3s;
-  overflow: hidden;
-  position: relative;
-}
-.sidebar div:hover { background: var(--nav-hover); }
-.sidebar div i { font-size: 28px; color: #fff; }
-.sidebar div span {
-  display: none;
-  margin-left: 12px;
-  font-size: 17px;
-  font-weight: 500;
-  white-space: nowrap;
-  color: #fff;
-}
-.sidebar:hover div { width: 200px; justify-content: flex-start; padding-left: 15px; }
-.sidebar:hover div span { display: inline; }
-
-.content {
-  margin-left: 80px;
-  flex: 1;
-  background: var(--bg-darker);
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 20px;
-}
-.content img { max-width: 70%; max-height: 70%; object-fit: cover; margin-bottom: 20px; }
-.content p { font-size: 3.4rem; font-weight: 400; font-family: 'Lilita One', sans-serif; }
-
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.8);
-  display: none;
-  align-items: center; justify-content: center;
-  z-index: 1000;
-}
-.modal-content {
-  background: #1e1e1e;
-  padding: 30px;
-  border-radius: 8px;
-  max-width: 600px;
-  width: 90%;
-  color: var(--text-light);
-  position: relative;
-  font-size: 16px;
-  line-height: 1.5;
-}
-.modal-content h2 {
-  margin-bottom: 20px;
-  font-family: 'Lilita One', sans-serif;
-  font-size: 2.5rem;
-  color: var(--accent-green);
-}
-.modal-close {
-  position: absolute;
-  top: 10px; right: 10px;
-  background: transparent;
-  border: none;
-  font-size: 24px;
-  color: var(--text-light);
-  cursor: pointer;
-  -webkit-app-region: no-drag;
-}
-.modal-close:hover { color: #c0392b; }
-
-/* Forms */
-.login-form input, 
-.forum-username input,
-.forum-form textarea,
-.chat-username input,
-.chat-form input {
-  width: 80%;
-  padding: 8px;
-  margin: 8px 0;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: var(--bg-darker);
-  color: var(--text-light);
-}
-.login-form button,
-.forum-form button,
-.chat-form button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  background: var(--accent-green);
-  color: #000;
-  cursor: pointer;
-  font-weight: bold;
-  margin-right: 10px;
-}
-
-.forum-form{
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  position: relative;
-}
-
-/* Dashboard (Profile) */
-.profile-pic {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--accent-green);
-  margin-bottom: 10px;
-}
-
-/* Forum */
-.forum-posts {
-  margin-top: 20px;
-  max-height: 300px;
-  overflow-y: auto;
-  border-top: 1px solid var(--border-color);
-  padding-top: 10px;
-  position: relative;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-color) var(--sidebar-bg);
-}
-.forum-post {
-  margin-bottom: 10px;
-  padding: 10px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: var(--bg-darker);
-  text-align: left;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  position: relative;
-}
-
-.forum-post-div{
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-size: 17px;
-}
-
-/* Chat */
-.chat-messages {
-  max-height: 300px;
-  overflow-y: auto;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: var(--bg-darker);
-  padding: 10px;
-  margin-bottom: 10px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-color) var(--sidebar-bg);
-}
-.chat-message {
-  padding: 5px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.chat-pic {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid var(--accent-green);
-}
-
-button{
-  cursor: pointer;
-  background: var(--bg-dark);
-  color: var(--text-light);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 8px;
-  font-size: 16px;
-  font-weight: bold;
-}
-.custom-file-upload {
-  display: inline-block;
-  padding: 6px 12px;
-  background: var(--accent-green);
-  color: var(--bg-dark);
-  border-radius: 4px;
-  font-weight: bold;
-  cursor: pointer;
-  text-align: center;
-}
-
-/* Hide the actual file input */
-.custom-file-upload input[type="file"] {
-  display: none;
-}
-
+      --bg-dark: #1f1f1f;
+      --bg-darker: #121212;
+      --text-light: #e0e0e0;
+      --accent-green: #66ff66;
+      --titlebar-bg: linear-gradient(135deg, #202020, #151515);
+      --sidebar-bg: #272727;
+      --nav-bg: #333333;
+      --nav-hover: #444444;
+      --border-color: #555;
+      --transition-speed: 0.3s;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg-dark);
+      color: var(--text-light);
+      font-family: 'Roboto', sans-serif;
+      overflow: hidden;
+    }
+    .titlebar {
+      height: 35px;
+      background: var(--titlebar-bg);
+      -webkit-app-region: drag;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .titlebar .title {
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--accent-green);
+    }
+    .window-controls {
+      display: flex;
+      -webkit-app-region: no-drag;
+    }
+    .window-control-btn {
+      width: 40px; height: 35px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      color: var(--text-light);
+      font-size: 14px;
+      transition: background var(--transition-speed);
+    }
+    .window-control-btn:hover { background: rgba(255,255,255,0.1); }
+    .close-btn:hover { background: #c0392b; }
+    .container {
+      height: calc(100% - 35px);
+      display: flex;
+    }
+    .sidebar {
+      position: fixed;
+      top: 35px;
+      left: 0;
+      width: 80px;
+      height: calc(100vh - 35px);
+      background: var(--sidebar-bg);
+      backdrop-filter: blur(8px);
+      padding-top: 15px;
+      overflow-y: auto;
+      z-index: 1000;
+      transition: width var(--transition-speed);
+      border-right: 1px solid var(--border-color);
+    }
+    .sidebar:hover { width: 220px; }
+    .sidebar div {
+      width: 60px; height: 60px;
+      background: var(--nav-bg);
+      margin: 15px auto;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background var(--transition-speed), width var(--transition-speed);
+      overflow: hidden;
+      position: relative;
+    }
+    .sidebar div:hover { background: var(--nav-hover); }
+    .sidebar div i { font-size: 28px; color: #fff; }
+    .sidebar div span {
+      display: none;
+      margin-left: 12px;
+      font-size: 17px;
+      font-weight: 500;
+      white-space: nowrap;
+      color: #fff;
+    }
+    .sidebar:hover div { width: 200px; justify-content: flex-start; padding-left: 15px; }
+    .sidebar:hover div span { display: inline; }
+    .content {
+      margin-left: 80px;
+      flex: 1;
+      background: var(--bg-darker);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+    }
+    /* Chat Container Styles */
+    .chat-container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      /* border: 1px solid var(--border-color); */
+      border-radius: 4px;
+      background: var(--bg-darker);
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .chat-message {
+      padding: 5px;
+      margin-bottom: 8px;
+    }
+    .chat-form {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+    .chat-form input {
+      width: 80%;
+      padding: 8px;
+      margin: 8px 0;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background: var(--bg-darker);
+      color: var(--text-light);
+      transition: border-color var(--transition-speed);
+    }
+    .chat-form input:focus {
+      border-color: var(--accent-green);
+      outline: none;
+    }
+    .chat-form button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      background: var(--accent-green);
+      color: #000;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background var(--transition-speed);
+    }
+    .chat-form button:hover {
+      background: #a3ff99;
+    }
+    /* Forum Container Styles */
+    .forum-container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .forum-posts {
+      flex: 1;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background: var(--bg-darker);
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .forum-post {
+      padding: 5px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .forum-form {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+    .forum-form textarea {
+      width: 80%;
+      padding: 8px;
+      margin: 8px 0;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background: var(--bg-darker);
+      color: var(--text-light);
+      transition: border-color var(--transition-speed);
+    }
+    .forum-form textarea:focus {
+      border-color: var(--accent-green);
+      outline: none;
+    }
+    .forum-form button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      background: var(--accent-green);
+      color: #000;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background var(--transition-speed);
+    }
+    .forum-form button:hover {
+      background: #a3ff99;
+    }
+    /* Dashboard Container Styles */
+    .dashboard-container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .dashboard-container img.profile-pic {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--accent-green);
+      margin-bottom: 10px;
+    }
+    .dashboard-container p {
+      font-size: 1.2rem;
+      margin: 5px 0;
+    }
+    .dashboard-container button,
+    .dashboard-container label.custom-file-upload {
+      margin: 5px;
+    }
+    /* Picker Toolbar & Panels */
+    .picker-toolbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 5px;
+    }
+    .picker-btn {
+      background: var(--nav-bg);
+      border: none;
+      color: var(--text-light);
+      font-size: 20px;
+      cursor: pointer;
+      transition: background var(--transition-speed);
+    }
+    .picker-btn:hover { background: var(--nav-hover); }
+    .emoji-picker, .sticker-picker {
+      display: none;
+      background: var(--bg-darker);
+      padding: 10px;
+      border-radius: 4px;
+      max-height: 150px;
+      overflow-y: auto;
+      margin-bottom: 5px;
+      border-top: 1px solid var(--border-color);
+    }
+    .emoji-picker span {
+      cursor: pointer;
+      margin: 3px;
+      font-size: 24px;
+      transition: transform 0.2s ease;
+    }
+    .emoji-picker span:hover {
+      transform: scale(1.2);
+    }
+    .sticker-picker img {
+      cursor: pointer;
+      margin: 3px;
+      max-width: 80px;
+      transition: transform 0.2s ease;
+    }
+    .sticker-picker img:hover {
+      transform: scale(1.1);
+    }
+    /* Other Modals (Login, About, Updates) */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: var(--bg-dark);
+      padding: 5px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 700px;
+      max-height: 100%;
+      color: var(--text-light);
+      position: relative;
+      font-size: 16px;
+      line-height: 1.5;
+      overflow-y: auto;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+    .modal-content h2 {
+      margin-bottom: 10px;
+      font-family: 'Lilita One', sans-serif;
+      font-size: 2.5rem;
+      color: var(--accent-green);
+    }
+    .modal-close {
+      position: absolute;
+      top: 10px; right: 10px;
+      background: transparent;
+      border: none;
+      font-size: 24px;
+      color: var(--text-light);
+      cursor: pointer;
+      -webkit-app-region: no-drag;
+      transition: color var(--transition-speed);
+    }
+    .modal-close:hover { color: #c0392b; }
+    /* Login & Forum Forms (in modals) */
+    .login-form input,
+    .forum-username input,
+    .forum-form textarea {
+      width: 80%;
+      padding: 8px;
+      margin: 8px 0;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background: var(--bg-darker);
+      color: var(--text-light);
+      transition: border-color var(--transition-speed);
+    }
+    .login-form input:focus,
+    .forum-form textarea:focus {
+      border-color: var(--accent-green);
+      outline: none;
+    }
+    .login-form button,
+    .forum-form button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      background: var(--accent-green);
+      color: #000;
+      cursor: pointer;
+      font-weight: bold;
+      margin-right: 10px;
+      transition: background var(--transition-speed);
+    }
+    .login-form button:hover,
+    .forum-form button:hover {
+      background: #a3ff99;
+    }
+    .forum-posts {
+      margin-top: 10px;
+      height: 500px;
+      overflow-y: auto;
+      border-top: 1px solid var(--border-color);
+      padding-top: 5px;
+      position: relative;
+    }
+    .forum-post {
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 4px;
+      background: #000;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .forum-post-div {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 17px;
+    }
+    button {
+      cursor: pointer;
+      background: var(--bg-dark);
+      color: var(--text-light);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      transition: background var(--transition-speed);
+    }
+    button:hover { background: var(--nav-bg); }
+    .custom-file-upload {
+      display: inline-block;
+      padding: 6px 12px;
+      color: var(--text-light);
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 25px;
+      cursor: pointer;
+      text-align: center;
+      transition: color var(--transition-speed);
+    }
+    .custom-file-upload:hover { color: var(--accent-green); }
+    .custom-file-upload input[type="file"] { display: none; }
+    /* Scrollbar Styles for Webkit */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--sidebar-bg); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
   </style>
 </head>
 <body>
@@ -335,13 +466,76 @@ button{
       </div>
     </div>
 
-    <!-- Content Area -->
+    <!-- Main Content Area -->
     <div class="content">
-      <img src="images/back.png" alt="Background">
-      <p>Select a messenger from the sidebar.</p>
+      <!-- Chat Container -->
+      <div class="chat-container" id="chatContainer">
+        <div class="chat-messages" id="chatMessages">
+          <!-- Chat messages will appear here -->
+        </div>
+        <!-- Emoji & Sticker Toolbar -->
+        <div class="picker-toolbar">
+          <button class="picker-btn" id="emojiToggle"><i class="ri-emotion-happy-line"></i></button>
+          <button class="picker-btn" id="stickerToggle"><i class="ri-image-line"></i></button>
+        </div>
+        <!-- Emoji Picker Panel -->
+        <div class="emoji-picker" id="emojiPicker">
+          <span>😀</span>
+          <span>😂</span>
+          <span>😍</span>
+          <span>👍</span>
+          <span>🙏</span>
+          <span>😎</span>
+          <span>🤔</span>
+          <span>😢</span>
+          <span>🎉</span>
+        </div>
+        <!-- Sticker Picker Panel -->
+        <div class="sticker-picker" id="stickerPicker"></div>
+        <!-- Chat Form -->
+        <form class="chat-form">
+          <input type="text" id="chatInput" placeholder="Type a message...">
+          <label class="custom-file-upload">
+            <input type="file" id="chatFile" accept="image/*,video/*">
+            <i class="ri-attachment-line"></i>
+          </label>
+          <button id="chatSendBtn" type="button"><i class="ri-send-plane-2-fill"></i></button>
+        </form>
+      </div>
+
+      <!-- Forum Container -->
+      <div class="forum-container" id="forumContainer" style="display: none;">
+        <div class="forum-posts" id="forumPosts">
+          <!-- Forum posts will appear here -->
+        </div>
+        <div class="forum-form">
+          <textarea id="forumInput" placeholder="Share your thoughts..." required></textarea>
+          <label class="custom-file-upload">
+            <input type="file" id="forumFile" accept="image/*,video/*">
+            <i class="ri-attachment-line"></i>
+          </label>
+          <button id="forumSubmit" type="button"><i class="ri-send-plane-2-fill"></i></button>
+        </div>
+      </div>
+
+      <!-- Dashboard Container -->
+      <div class="dashboard-container" id="dashboardContainer" style="display: none;">
+        <img id="profilePic" class="profile-pic" src="images/default-profile.png" alt="Profile Picture">
+        <p>Username: <span id="dashboardUsername"></span></p>
+        <p>Email: <span id="dashboardEmail"></span></p>
+        <p>Password: <i class="ri-lock-fill"></i></p>
+        <p>Credits: <span id="dashboardCredits"></span></p>
+        <label class="custom-file-upload">
+          <input type="file" id="profilePicInput" accept="image/*">
+          Upload
+        </label>
+        <button id="uploadPicBtn">Upload Profile Pic</button>
+        <button id="logoutBtn">Logout</button>
+      </div>
     </div>
   </div>
 
+  <!-- Other Modals -->
   <!-- Login Modal -->
   <div class="modal-overlay" id="loginModal">
     <div class="modal-content">
@@ -355,33 +549,14 @@ button{
     </div>
   </div>
 
-  <!-- Dashboard Modal (User Info & Profile Pic Upload) -->
-  <div class="modal-overlay" id="dashboardModal">
-    <div class="modal-content">
-      <button class="modal-close" id="closeDashboardModal"><i class="ri-close-fill"></i></button>
-      <h2>Dashboard</h2>
-      <img id="profilePic" class="profile-pic" src="images/default-profile.png" alt="Profile Picture">
-      <p>Username: <span id="dashboardUsername"></span></p>
-      <p>Email: <span id="dashboardEmail"></span></p>
-      <p>Password: <i class="ri-lock-fill"></i></p>
-      <p>Credits: <span id="dashboardCredits"></span></p>
-      <label class="custom-file-upload">
-        <input type="file" id="profilePicInput" accept="image/*">
-        Upload
-      </label>
-      <button id="uploadPicBtn">Upload Profile Pic</button>
-      <button id="logoutBtn">Logout</button>
-    </div>
-  </div>
-
   <!-- About Modal -->
   <div class="modal-overlay" id="aboutModal">
-    <div class="modal-content">
+    <div class="modal-content" style="display: flex; flex-direction: column; justify-content: center; max-height: 400px;">
       <button class="modal-close" id="closeAboutModal"><i class="ri-close-fill"></i></button>
       <h2>About Eadid</h2>
       <p>
         Eadid Social Manager brings your social platforms into one sleek interface.
-        Inspired by Kali Linux aesthetics, it features a dark, customizable UI with integration for popular services.
+        Inspired by modern aesthetics, it features a dark, customizable UI with integration for popular services.
       </p>
       <p>Contact Us:</p>
       <ul>
@@ -394,295 +569,428 @@ button{
 
   <!-- Updates Modal -->
   <div class="modal-overlay" id="updatesModal">
-    <div class="modal-content">
+    <div class="modal-content" style="display: flex; flex-direction: column; justify-content: center; max-height: 400px;">
       <button class="modal-close" id="closeUpdatesModal"><i class="ri-close-fill"></i></button>
       <h2>Latest Updates</h2>
       <ul class="updates-list" id="updatesList"></ul>
     </div>
   </div>
 
-  <!-- Forum Modal -->
-  <div class="modal-overlay" id="forumModal">
-    <div class="modal-content">
-      <button class="modal-close" id="closeForumModal"><i class="ri-close-fill"></i></button>
-      <h2>Forum</h2>
-      <div class="forum-form">
-        <textarea id="forumInput" placeholder="Share your thoughts..." required></textarea>
-        <button id="forumSubmit">Post</button>
-      </div>
-      <div class="forum-posts" id="forumPosts"></div>
-    </div>
-  </div>
-
-  <!-- Chat Modal -->
-  <div class="modal-overlay" id="chatModal">
-    <div class="modal-content">
-      <button class="modal-close" id="closeChatModal"><i class="ri-close-fill"></i></button>
-      <h2>Live Chat</h2>
-      <div class="chat-messages" id="chatMessages"></div>
-      <div class="chat-form">
-        <input type="text" id="chatInput" placeholder="Type a message...">
-        <button id="chatSendBtn">Send</button>
-      </div>
-    </div>
-  </div>
+  <!-- Beep Sound -->
+  <audio id="beepSound" src="beep.mp3" preload="auto"></audio>
 
   <!-- Main JavaScript -->
   <script>
-    // ===================== FIREBASE CONFIG =====================
-    const firebaseConfig = {
-      // Replace these with your Firebase project config values
-      apiKey: "AIzaSyA1kGDOAuQRqdgXHX3Ugjj_zL7_bqYXos0",
-      authDomain: "myapp-3a874.firebaseapp.com",
-      projectId: "myapp-3a874",
-      storageBucket: "myapp-3a874.appspot.com",
-      messagingSenderId: "430236087961",
-      appId: "1:430236087961:web:d7b0e75c6cf2498c9b6a08"
+   // Firebase configuration & Initialization
+const firebaseConfig = {
+  // Replace these with your Firebase project config values
+  apiKey: "AIzaSyA1kGDOAuQRqdgXHX3Ugjj_zL7_bqYXos0",
+  authDomain: "myapp-3a874.firebaseapp.com",
+  projectId: "myapp-3a874",
+  storageBucket: "myapp-3a874.appspot.com",
+  messagingSenderId: "430236087961",
+  appId: "1:430236087961:web:d7b0e75c6cf2498c9b6a08"
+};
+firebase.initializeApp(firebaseConfig);
+const firestore = firebase.firestore();
+const auth = firebase.auth();
+const storage = firebase.storage();
+
+// ===================== AUTH STATE =====================
+auth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById("loginModal").style.display = "none";
+    // Update profile picture wherever applicable.
+    const profilePicElem = document.getElementById("profilePic");
+    if (user.photoURL && profilePicElem) {
+      profilePicElem.src = user.photoURL;
+    }
+  } else {
+    document.getElementById("loginModal").style.display = "flex";
+  }
+});
+
+// ===================== GMAIL VALIDATION =====================
+function isValidGmail(email) {
+  const gmailRegex = /^[^@\s]+@gmail\.com$/i;
+  return gmailRegex.test(email);
+}
+
+// ===================== LOGIN / SIGNUP =====================
+const loginBtn = document.getElementById('loginBtn');
+const signupBtn = document.getElementById('signupBtn');
+const loginEmail = document.getElementById('loginEmail');
+const loginPassword = document.getElementById('loginPassword');
+
+loginBtn.addEventListener('click', () => {
+  const email = loginEmail.value.trim();
+  const password = loginPassword.value.trim();
+  if (!isValidGmail(email)) {
+    alert("Please enter a valid @gmail.com email address.");
+    return;
+  }
+  if (email && password) {
+    auth.signInWithEmailAndPassword(email, password)
+      .then(() => document.getElementById("loginModal").style.display = "none")
+      .catch(err => alert(`Login Error: ${err.code} - ${err.message}`));
+  }
+});
+
+signupBtn.addEventListener('click', () => {
+  const email = loginEmail.value.trim();
+  const password = loginPassword.value.trim();
+  if (!isValidGmail(email)) {
+    alert("Please enter a valid @gmail.com email address.");
+    return;
+  }
+  if (email && password) {
+    auth.createUserWithEmailAndPassword(email, password)
+      .then(userCredential => {
+        const user = userCredential.user;
+        return user.updateProfile({ displayName: email.split('@')[0] });
+      })
+      .then(() => document.getElementById("loginModal").style.display = "none")
+      .catch(err => alert(`Signup Error: ${err.code} - ${err.message}`));
+  }
+});
+
+// ===================== WINDOW CONTROLS =====================
+const minimizeBtn = document.getElementById('minimizeBtn');
+const maximizeBtn = document.getElementById('maximizeBtn');
+const closeBtn = document.getElementById('closeBtn');
+minimizeBtn.addEventListener('click', () => window.windowControls.minimize());
+maximizeBtn.addEventListener('click', () => window.windowControls.maximize());
+closeBtn.addEventListener('click', () => window.windowControls.close());
+
+// ===================== ABOUT MODAL =====================
+const aboutBtn = document.getElementById('aboutBtn');
+const aboutModal = document.getElementById('aboutModal');
+const closeAboutModal = document.getElementById('closeAboutModal');
+aboutBtn.addEventListener('click', () => aboutModal.style.display = 'flex');
+closeAboutModal.addEventListener('click', () => aboutModal.style.display = 'none');
+aboutModal.addEventListener('click', (e) => { if (e.target === aboutModal) aboutModal.style.display = 'none'; });
+
+// ===================== UPDATES MODAL =====================
+const updatesBtn = document.getElementById('updatesBtn');
+const updatesModal = document.getElementById('updatesModal');
+const closeUpdatesModal = document.getElementById('closeUpdatesModal');
+const updatesList = document.getElementById('updatesList');
+let updatesSocket = null;
+function openUpdatesModal() {
+  updatesModal.style.display = 'flex';
+  if (!updatesSocket) {
+    updatesSocket = new WebSocket("wss://echo.websocket.org/updates");
+    updatesSocket.onopen = () => console.log("WebSocket connected.");
+    updatesSocket.onmessage = (e) => {
+      if (e.data.startsWith("Request served by")) return;
+      const li = document.createElement('li');
+      li.textContent = e.data;
+      updatesList.appendChild(li);
     };
-    firebase.initializeApp(firebaseConfig);
-    const firestore = firebase.firestore();
-    const auth = firebase.auth();
-    const storage = firebase.storage();
+    updatesSocket.onerror = (err) => console.error("WebSocket Error:", err);
+    updatesSocket.onclose = () => { console.log("WebSocket closed."); updatesSocket = null; };
+  }
+}
+function closeUpdatesModalFunc() { updatesModal.style.display = 'none'; }
+updatesBtn.addEventListener('click', openUpdatesModal);
+closeUpdatesModal.addEventListener('click', closeUpdatesModalFunc);
+updatesModal.addEventListener('click', (e) => { if (e.target === updatesModal) closeUpdatesModalFunc(); });
 
-    // ===================== AUTH STATE =====================
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        document.getElementById("loginModal").style.display = "none";
-        // Update dashboard profile pic if available
-        if (user.photoURL) {
-          document.getElementById("profilePic").src = user.photoURL;
-        }
-      } else {
-        document.getElementById("loginModal").style.display = "flex";
-      }
-    });
+// ===================== DASHBOARD FUNCTIONALITY =====================
+const dashboardBtn = document.getElementById('dashboardBtn');
+const dashboardContainer = document.getElementById('dashboardContainer');
+const dashboardUsername = document.getElementById('dashboardUsername');
+const dashboardEmail = document.getElementById('dashboardEmail');
+const dashboardCreditsSpan = document.getElementById('dashboardCredits');
 
-    // ===================== LOGIN / SIGNUP =====================
-    const loginBtn = document.getElementById('loginBtn');
-    const signupBtn = document.getElementById('signupBtn');
-    const loginEmail = document.getElementById('loginEmail');
-    const loginPassword = document.getElementById('loginPassword');
-
-    loginBtn.addEventListener('click', () => {
-      const email = loginEmail.value.trim();
-      const password = loginPassword.value.trim();
-      if (email && password) {
-        auth.signInWithEmailAndPassword(email, password)
-          .then(() => document.getElementById("loginModal").style.display = "none")
-          .catch(err => alert(`Login Error: ${err.code} - ${err.message}`));
-      }
-    });
-
-    signupBtn.addEventListener('click', () => {
-      const email = loginEmail.value.trim();
-      const password = loginPassword.value.trim();
-      if (email && password) {
-        auth.createUserWithEmailAndPassword(email, password)
-          .then(userCredential => {
-            const user = userCredential.user;
-            return user.updateProfile({ displayName: email.split('@')[0] });
-          })
-          .then(() => document.getElementById("loginModal").style.display = "none")
-          .catch(err => alert(`Signup Error: ${err.code} - ${err.message}`));
-      }
-    });
-
-    // ===================== WINDOW CONTROLS (via preload) =====================
-    const minimizeBtn = document.getElementById('minimizeBtn');
-    const maximizeBtn = document.getElementById('maximizeBtn');
-    const closeBtn = document.getElementById('closeBtn');
-    minimizeBtn.addEventListener('click', () => window.windowControls.minimize());
-    maximizeBtn.addEventListener('click', () => window.windowControls.maximize());
-    closeBtn.addEventListener('click', () => window.windowControls.close());
-
-    // ===================== ABOUT MODAL =====================
-    const aboutBtn = document.getElementById('aboutBtn');
-    const aboutModal = document.getElementById('aboutModal');
-    const closeAboutModal = document.getElementById('closeAboutModal');
-    aboutBtn.addEventListener('click', () => aboutModal.style.display = 'flex');
-    closeAboutModal.addEventListener('click', () => aboutModal.style.display = 'none');
-    aboutModal.addEventListener('click', (e) => { if (e.target === aboutModal) aboutModal.style.display = 'none'; });
-
-    // ===================== UPDATES MODAL =====================
-    const updatesBtn = document.getElementById('updatesBtn');
-    const updatesModal = document.getElementById('updatesModal');
-    const closeUpdatesModal = document.getElementById('closeUpdatesModal');
-    const updatesList = document.getElementById('updatesList');
-    let updatesSocket = null;
-    function openUpdatesModal() {
-      updatesModal.style.display = 'flex';
-      if (!updatesSocket) {
-        updatesSocket = new WebSocket("wss://echo.websocket.org/updates");
-        updatesSocket.onopen = () => console.log("WebSocket connected.");
-        updatesSocket.onmessage = (e) => {
-          if (e.data.startsWith("Request served by")) return;
-          const li = document.createElement('li');
-          li.textContent = e.data;
-          updatesList.appendChild(li);
-          // Notification sound removed.
-        };
-        updatesSocket.onerror = (err) => console.error("WebSocket Error:", err);
-        updatesSocket.onclose = () => { console.log("WebSocket closed."); updatesSocket = null; };
-      }
+dashboardBtn.addEventListener('click', async () => {
+  const user = firebase.auth().currentUser;
+  if (user) {
+    dashboardUsername.textContent = user.displayName || user.email.split('@')[0] || "Anonymous";
+    dashboardEmail.textContent = user.email;
+    const userKey = user.displayName || user.email.split('@')[0];
+    if (userKey) {
+      const docRef = firestore.collection("users").doc(userKey);
+      const docSnap = await docRef.get();
+      dashboardCreditsSpan.textContent = docSnap.exists ? (docSnap.data().credits || 0) : 0;
+    } else {
+      dashboardCreditsSpan.textContent = 0;
     }
-    function closeUpdatesModalFunc() { updatesModal.style.display = 'none'; }
-    updatesBtn.addEventListener('click', openUpdatesModal);
-    closeUpdatesModal.addEventListener('click', closeUpdatesModalFunc);
-    updatesModal.addEventListener('click', (e) => { if (e.target === updatesModal) closeUpdatesModalFunc(); });
+  }
+  // Show dashboard and hide other containers.
+  chatContainer.style.display = 'none';
+  forumContainer.style.display = 'none';
+  dashboardContainer.style.display = 'flex';
+});
 
-    // ===================== DASHBOARD MODAL =====================
-    const dashboardBtn = document.getElementById('dashboardBtn');
-    const dashboardModal = document.getElementById('dashboardModal');
-    const closeDashboardModal = document.getElementById('closeDashboardModal');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const dashboardUsername = document.getElementById('dashboardUsername');
-    const dashboardEmail = document.getElementById('dashboardEmail');
-    const dashboardCreditsSpan = document.getElementById('dashboardCredits');
-    dashboardBtn.addEventListener('click', async () => {
-      const user = firebase.auth().currentUser;
-      if (user) {
-        dashboardUsername.textContent = user.displayName || user.email.split('@')[0] || "Anonymous";
-        dashboardEmail.textContent = user.email;
-        const userKey = user.displayName || user.email.split('@')[0];
-        if (userKey) {
-          const docRef = firestore.collection("users").doc(userKey);
-          const docSnap = await docRef.get();
-          dashboardCreditsSpan.textContent = docSnap.exists ? (docSnap.data().credits || 0) : 0;
-        } else {
-          dashboardCreditsSpan.textContent = 0;
-        }
-      }
-      dashboardModal.style.display = 'flex';
+// ===================== PROFILE PICTURE UPLOAD =====================
+const profilePicInput = document.getElementById('profilePicInput');
+const uploadPicBtn = document.getElementById('uploadPicBtn');
+const profilePicImg = document.getElementById('profilePic');
+
+uploadPicBtn.addEventListener('click', () => {
+  const file = profilePicInput.files[0];
+  if (!file) {
+    alert("Please select an image file.");
+    return;
+  }
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    alert("You must be logged in to upload a profile picture.");
+    return;
+  }
+  const storageRef = firebase.storage().ref();
+  const fileRef = storageRef.child(`profile_pics/${user.uid}_${file.name}`);
+  fileRef.put(file)
+    .then(snapshot => snapshot.ref.getDownloadURL())
+    .then(url => user.updateProfile({ photoURL: url }))
+    .then(() => firebase.auth().currentUser.reload())
+    .then(() => {
+      profilePicImg.src = firebase.auth().currentUser.photoURL;
+      alert("Profile picture updated.");
+    })
+    .catch(err => {
+      console.error("Error uploading profile picture:", err);
+      alert("Error uploading profile picture.");
     });
-    closeDashboardModal.addEventListener('click', () => dashboardModal.style.display = 'none');
-    logoutBtn.addEventListener('click', () => {
-      auth.signOut().then(() => dashboardModal.style.display = 'none');
-    });
+});
 
-    // ===================== PROFILE PICTURE UPLOAD =====================
-    const profilePicInput = document.getElementById('profilePicInput');
-    const uploadPicBtn = document.getElementById('uploadPicBtn');
-    const profilePicImg = document.getElementById('profilePic');
-    uploadPicBtn.addEventListener('click', () => {
-      const file = profilePicInput.files[0];
-      if (!file) { alert("Please select an image file."); return; }
-      const user = firebase.auth().currentUser;
-      if (!user) { alert("You must be logged in to upload a profile picture."); return; }
-      const storageRef = firebase.storage().ref();
-      const fileRef = storageRef.child(`profile_pics/${user.uid}_${file.name}`);
-      fileRef.put(file).then(snapshot => snapshot.ref.getDownloadURL())
-        .then(url => {
-          return user.updateProfile({ photoURL: url }).then(() => {
-            profilePicImg.src = url;
-            alert("Profile picture updated.");
-          });
-        }).catch(err => {
-          console.error("Error uploading profile picture:", err);
-          alert("Error uploading profile picture.");
-        });
-    });
+// ===================== LINKIFY HELPER =====================
+function linkify(text) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
+}
 
-    function linkify(text) {
-      const urlRegex = /(https?:\/\/[^\s]+)/g;
-      return text.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
-    }
+// ===================== MEDIA RENDERING HELPER =====================
+function renderMedia(url, type) {
+  if (!url || !type) return "";
+  console.log("Rendering media:", url, type); // Debug log to verify URL and type
+  if (type === "sticker") {
+    return `<br><img src="${url}" style="max-width:300px; margin-top:5px; display:block;" alt="sticker">`;
+  } else if (type.startsWith("image")) {
+    return `<br><img src="${url}" style="max-width:300px; margin-top:5px; border-radius: 4px; display:block;" alt="image">`;
+  } else if (type.startsWith("video")) {
+    return `<br><video controls style="max-width:300px; max-height:300px; margin-top:5px; border-radius: 4px; display:block;">
+              <source src="${url}" type="${type}">
+              Your browser does not support the video tag.
+            </video>`;
+  }
+  return "";
+}
 
-    // ===================== FORUM MODAL =====================
-    const forumBtn = document.getElementById('forumBtn');
-    const forumModal = document.getElementById('forumModal');
-    const closeForumModal = document.getElementById('closeForumModal');
-    const forumInput = document.getElementById('forumInput');
-    const forumSubmit = document.getElementById('forumSubmit');
-    const forumPosts = document.getElementById('forumPosts');
+// ===================== FORUM FUNCTIONALITY =====================
+const forumInput = document.getElementById('forumInput');
+const forumSubmit = document.getElementById('forumSubmit');
+const forumPosts = document.getElementById('forumPosts');
 
-    forumBtn.addEventListener('click', () => forumModal.style.display = 'flex');
-    closeForumModal.addEventListener('click', () => forumModal.style.display = 'none');
-    forumModal.addEventListener('click', (e) => { if (e.target === forumModal) forumModal.style.display = 'none'; });
-      
-    forumSubmit.addEventListener('click', () => {
-      const text = forumInput.value.trim();
-      const user = firebase.auth().currentUser;
-      const userName = user ? (user.displayName || user.email.split('@')[0]) : "Anonymous";
-      if (!text) return;
-      firebase.firestore().collection("forumPosts").add({
-        userName,
-        text,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        time: new Date().toLocaleDateString()  // Only the date is stored
-      }).then(() => {
-        forumInput.value = "";
-        // Award 1 credit for forum posting
-        firebase.firestore().collection("users").doc(userName).set({
-          credits: firebase.firestore.FieldValue.increment(1)
-        }, { merge: true });
-      }).catch(err => console.error("Error posting to forum:", err));
-    });
+forumSubmit.addEventListener('click', async () => {
+  const text = forumInput.value.trim();
+  const user = firebase.auth().currentUser;
+  const userName = user ? (user.displayName || user.email.split('@')[0]) : "Anonymous";
+  let fileUrl = "";
+  let fileType = "";
+  const file = document.getElementById('forumFile').files[0];
+  if (file) {
+    const storageRef = firebase.storage().ref();
+    const fileRef = storageRef.child(`forum_files/${user.uid}_${file.name}`);
+    await fileRef.put(file);
+    fileUrl = await fileRef.getDownloadURL();
+    fileType = file.type;
+  }
+  firestore.collection("forumPosts").add({
+    userName,
+    text,
+    fileUrl,
+    fileType,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    time: new Date().toLocaleDateString()
+  }).then(() => {
+    forumInput.value = "";
+    document.getElementById('forumFile').value = "";
+    firestore.collection("users").doc(userName).set({
+      credits: firebase.firestore.FieldValue.increment(1)
+    }, { merge: true });
+  }).catch(err => console.error("Error posting to forum:", err));
+});
 
-    firebase.firestore().collection("forumPosts").orderBy("timestamp", "desc")
-      .onSnapshot(snapshot => {
-        forumPosts.innerHTML = "";
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          appendForumPost(data);
-        });
-      });
-
-    function appendForumPost(post) {
+firestore.collection("forumPosts").orderBy("timestamp", "desc")
+  .onSnapshot(snapshot => {
+    forumPosts.innerHTML = "";
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      console.log("Forum post data:", data); // Debug log
       const div = document.createElement('div');
       div.className = 'forum-post';
-      // Use linkify to convert URLs in the post text to clickable links.
-      const linkedText = linkify(post.text);
-      div.innerHTML = `<strong style='font-size: 13px;'>${post.userName || "Anonymous"}</strong> <em style='font-size: 12px; position: absolute; top: 5px; left: 5px;'>(${post.time || "Just now"})</em>`;
-      forumPosts.appendChild(div).classList.add('forum-post-div');
-      const p = document.createElement('p');
-      p.innerHTML = linkedText;
-      p.style.fontSize = '14px';
-      div.appendChild(p);
-    }
-
-    // ===================== CHAT MODAL =====================
-    const chatBtn = document.getElementById('chatBtn');
-    const chatModal = document.getElementById('chatModal');
-    const closeChatModal = document.getElementById('closeChatModal');
-    const chatMessagesDiv = document.getElementById('chatMessages');
-    const chatInput = document.getElementById('chatInput');
-    const chatSendBtn = document.getElementById('chatSendBtn');
-
-    chatBtn.addEventListener('click', () => chatModal.style.display = 'flex');
-    closeChatModal.addEventListener('click', () => chatModal.style.display = 'none');
-    chatModal.addEventListener('click', (e) => { if (e.target === chatModal) chatModal.style.display = 'none'; });
-
-    chatSendBtn.addEventListener('click', () => {
-      const messageText = chatInput.value.trim();
-      if (!messageText) return;
-      const user = firebase.auth().currentUser;
-      // Use the authenticated user's display name if available; otherwise default to "Guest"
-      const userName = user ? (user.displayName || user.email.split('@')[0]) : "Guest";
-      const photoURL = user ? user.photoURL || "" : "";
-      firebase.firestore().collection("chats").add({
-        userName,
-        text: messageText,
-        photoURL,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => chatInput.value = "")
-        .catch(err => console.error("Error sending chat message:", err));
+      let mediaHtml = "";
+      if (data.fileUrl) {
+        mediaHtml = renderMedia(data.fileUrl, data.fileType);
+      }
+      div.innerHTML = `
+        <strong style="font-size: 16px; display: flex; align-items: center; gap: 10px;">
+          <i class="ri-corner-left-down-line" style="font-size: 26px;"></i>${data.userName || "Anonymous"}
+          <em style="font-size: 12px;">(${data.time || "Just now"})</em>
+        </strong>
+        <p style="font-size:14px; line-height: 20px;">${linkify(data.text)}</p>
+        ${mediaHtml}
+      `;
+      forumPosts.appendChild(div);
     });
+  });
 
-    firebase.firestore().collection("chats").orderBy("timestamp", "asc")
-      .onSnapshot(snapshot => {
-        chatMessagesDiv.innerHTML = "";
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const msgDiv = document.createElement('div');
-          msgDiv.className = "chat-message";
-          const picHTML = data.photoURL ? `<img src="${data.photoURL}" alt="Profile" class="chat-pic">` : "";
-          // Apply linkify to chat message text as well.
-          const linkedMessage = linkify(data.text);
-          msgDiv.innerHTML = `${picHTML}<strong>${data.userName}:</strong> ${linkedMessage}`;
-          chatMessagesDiv.appendChild(msgDiv);
+// ===================== CHAT FUNCTIONALITY =====================
+const chatMessagesDiv = document.getElementById('chatMessages');
+const chatInput = document.getElementById('chatInput');
+const chatSendBtn = document.getElementById('chatSendBtn');
+
+emojiToggle.addEventListener('click', () => {
+  emojiPicker.style.display = (emojiPicker.style.display === 'block') ? 'none' : 'block';
+  stickerPicker.style.display = 'none';
+});
+
+stickerToggle.addEventListener('click', async () => {
+  if (stickerPicker.style.display === 'block') {
+    stickerPicker.style.display = 'none';
+    return;
+  }
+  if (stickerPicker.innerHTML.trim() === "") {
+    const apiKey = "1FQEo2nvaarypzmTvT0RY5leH7w33EXA";
+    const limit = 9;
+    const url = `https://api.giphy.com/v1/stickers/trending?api_key=${apiKey}&limit=${limit}&rating=g`;
+    try {
+      const response = await fetch(url);
+      const result = await response.json();
+      if (result.data && result.data.length > 0) {
+        result.data.forEach(sticker => {
+          const img = document.createElement('img');
+          img.src = sticker.images.fixed_width.url;
+          img.dataset.sticker = sticker.images.fixed_width.url;
+          stickerPicker.appendChild(img);
         });
-        chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+      }
+    } catch (error) {
+      console.error("Error loading stickers:", error);
+    }
+  }
+  stickerPicker.style.display = 'block';
+  emojiPicker.style.display = 'none';
+});
+
+document.querySelectorAll('#emojiPicker span').forEach(emoji => {
+  emoji.addEventListener('click', () => {
+    chatInput.value += emoji.textContent;
+  });
+});
+
+stickerPicker.addEventListener('click', async (e) => {
+  if (e.target.tagName.toLowerCase() === "img") {
+    const stickerUrl = e.target.dataset.sticker;
+    const user = firebase.auth().currentUser;
+    const userName = user ? (user.displayName || user.email.split('@')[0]) : "Guest";
+    const photoURL = user ? user.photoURL || "" : "";
+    try {
+      await firestore.collection("chats").add({
+        uid: user ? user.uid : null,
+        userName,
+        text: "",
+        photoURL,
+        fileUrl: stickerUrl,
+        fileType: "sticker",
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
       });
+      stickerPicker.style.display = 'none';
+    } catch (err) {
+      console.error("Error sending sticker:", err);
+    }
+  }
+});
+
+chatSendBtn.addEventListener('click', async () => {
+  const messageText = chatInput.value.trim();
+  const user = firebase.auth().currentUser;
+  const userName = user ? (user.displayName || user.email.split('@')[0]) : "Guest";
+  const photoURL = user ? user.photoURL || "" : "";
+  let fileUrl = "";
+  let fileType = "";
+  const file = document.getElementById('chatFile').files[0];
+  if (file) {
+    const storageRef = firebase.storage().ref();
+    const fileRef = storageRef.child(`chat_files/${user.uid}_${file.name}`);
+    await fileRef.put(file);
+    fileUrl = await fileRef.getDownloadURL();
+    fileType = file.type;
+  }
+  firestore.collection("chats").add({
+    uid: user ? user.uid : null,
+    userName,
+    text: messageText,
+    photoURL,
+    fileUrl,
+    fileType,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    chatInput.value = "";
+    document.getElementById('chatFile').value = "";
+  }).catch(err => console.error("Error sending chat message:", err));
+});
+
+firestore.collection("chats").orderBy("timestamp", "asc")
+  .onSnapshot(snapshot => {
+    snapshot.docChanges().forEach(change => {
+      if (change.type === "added") {
+        const data = change.doc.data();
+        console.log("New chat message data:", data); // Debug log
+        const msgDiv = document.createElement('div');
+        msgDiv.className = "chat-message";
+        
+        const profileImg = data.photoURL 
+          ? `<img src="${data.photoURL}" style="width:40px; height:40px; border-radius:50%; vertical-align:middle; margin-right:5px;" alt="profile">`
+          : "";
+          
+        let mediaHtml = "";
+        if (data.fileUrl) {
+          mediaHtml = renderMedia(data.fileUrl, data.fileType);
+        }
+        
+        const messageHtml = `
+          <div style="display: flex; align-items: center; margin-bottom: 10px;">
+            <i class="ri-corner-left-down-line" style="font-size: 26px;"></i>
+            ${profileImg}
+            <strong>${data.userName}:</strong>
+          </div>
+          <span style="font-size: 17px;">${linkify(data.text)}</span>
+          ${mediaHtml}
+        `;
+        
+        msgDiv.innerHTML = messageHtml;
+        chatMessagesDiv.appendChild(msgDiv);
+        chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+        
+        const currentUser = firebase.auth().currentUser;
+        if (currentUser && data.uid !== currentUser.uid) {
+          const beepSound = document.getElementById("beepSound");
+          if (beepSound) {
+            beepSound.play().catch(e => console.log("Sound play prevented:", e));
+          }
+        }
+      }
+    });
+  });
+
+// ===================== SIDEBAR TOGGLE =====================
+const chatContainer = document.getElementById('chatContainer');
+const forumContainer = document.getElementById('forumContainer');
+
+document.getElementById('chatBtn').addEventListener('click', () => {
+  chatContainer.style.display = 'flex';
+  forumContainer.style.display = 'none';
+  dashboardContainer.style.display = 'none';
+});
+document.getElementById('forumBtn').addEventListener('click', () => {
+  chatContainer.style.display = 'none';
+  forumContainer.style.display = 'flex';
+  dashboardContainer.style.display = 'none';
+});
+
   </script>
 </body>
 </html>
