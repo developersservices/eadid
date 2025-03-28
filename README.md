@@ -22,4 +22,5 @@ Clone this repository to your local machine:
 
 ```bash
 git clone https://github.com/developersservices/eadid.git
-cd eadit-social-media-manager
+cd eadit
+npm install -- for node Modules
