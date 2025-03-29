@@ -36,7 +36,7 @@
     }
     .titlebar {
       height: 35px;
-      background: var(--titlebar-bg);
+      /* background: var(--titlebar-bg); */
       -webkit-app-region: drag;
       display: flex;
       align-items: center;
@@ -64,8 +64,12 @@
       font-size: 14px;
       transition: background var(--transition-speed);
     }
-    .window-control-btn:hover { background: rgba(255,255,255,0.1); }
-    .close-btn:hover { background: #c0392b; }
+    .window-control-btn:hover { 
+      background: rgba(255,255,255,0.1); 
+    }
+    .close-btn:hover { 
+      background: #c0392b; 
+    }
     .container {
       height: calc(100% - 35px);
       display: flex;
@@ -74,7 +78,7 @@
       position: fixed;
       top: 35px;
       left: 0;
-      width: 80px;
+      width: 0px;
       height: calc(100vh - 35px);
       background: var(--sidebar-bg);
       backdrop-filter: blur(8px);
@@ -82,11 +86,13 @@
       overflow-y: auto;
       z-index: 1000;
       transition: width var(--transition-speed);
-      border-right: 1px solid var(--border-color);
     }
-    .sidebar:hover { width: 220px; }
+    .sidebar.activate { 
+      width: 220px;
+    }
     .sidebar div {
-      width: 60px; height: 60px;
+      width: 100%; 
+      height: 60px;
       background: var(--nav-bg);
       margin: 15px auto;
       border-radius: 8px;
@@ -98,20 +104,27 @@
       overflow: hidden;
       position: relative;
     }
-    .sidebar div:hover { background: var(--nav-hover); }
-    .sidebar div i { font-size: 28px; color: #fff; }
+    .sidebar div:hover { 
+      background: var(--nav-hover); 
+    }
+    .sidebar div i { 
+      font-size: 28px; 
+      color: #fff; 
+      padding-left: 10px;
+    }
     .sidebar div span {
-      display: none;
+      width: 200px;  
+      display: inline;
+      justify-content: flex-start;
       margin-left: 12px;
       font-size: 17px;
       font-weight: 500;
       white-space: nowrap;
       color: #fff;
+      padding-left: 20px; 
     }
-    .sidebar:hover div { width: 200px; justify-content: flex-start; padding-left: 15px; }
-    .sidebar:hover div span { display: inline; }
     .content {
-      margin-left: 80px;
+      /* margin-left: 0px; */
       flex: 1;
       background: var(--bg-darker);
       overflow-y: auto;
@@ -184,7 +197,6 @@
     .forum-posts {
       flex: 1;
       overflow-y: auto;
-      border: 1px solid var(--border-color);
       border-radius: 4px;
       background: var(--bg-darker);
       padding: 10px;
@@ -379,16 +391,38 @@
       text-align: center;
       transition: color var(--transition-speed);
     }
-    .custom-file-upload:hover { color: var(--accent-green); }
-    .custom-file-upload input[type="file"] { display: none; }
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: var(--sidebar-bg); border-radius: 4px; }
-    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+    .custom-file-upload:hover { 
+      color: var(--accent-green); 
+    }
+    .custom-file-upload input[type="file"] { 
+      display: none; 
+    }
+    ::-webkit-scrollbar { 
+      width: 8px; 
+    }
+    ::-webkit-scrollbar-track { 
+      background: var(--sidebar-bg); 
+      border-radius: 4px; 
+    }
+    ::-webkit-scrollbar-thumb { 
+      background: var(--border-color); 
+      border-radius: 4px; 
+    }
+
+    @media (max-width: 400px) {
+      .content {
+      padding: 5px;
+    }
+      .forum-posts {
+      padding: 0px;
+    }
+    }
   </style>
 </head>
 <body>
   <div class="titlebar">
-    <div class="title">Eadid Social Manager</div>
+    <i class="ri-menu-line hamburger" style="font-size: 25px; cursor: pointer;"></i>
+    <div class="title">Eadid</div>
     <div class="window-controls">
       <button class="window-control-btn" id="minimizeBtn"><i class="ri-subtract-fill"></i></button>
       <button class="window-control-btn" id="maximizeBtn"><i class="ri-fullscreen-exit-fill"></i></button>

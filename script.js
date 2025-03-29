@@ -25,16 +25,16 @@ const firebaseConfig = {
     return /^[^@\s]+@gmail\.com$/i.test(email);
   }
   
-  const loginBtn = document.getElementById('loginBtn'),
-        signupBtn = document.getElementById('signupBtn'),
-        loginEmail = document.getElementById('loginEmail'),
-        loginPassword = document.getElementById('loginPassword');
+  const loginBtn = document.getElementById('loginBtn')
+  const signupBtn = document.getElementById('signupBtn')
+  const loginEmail = document.getElementById('loginEmail') 
+  const loginPassword = document.getElementById('loginPassword');
   
   loginBtn.addEventListener('click', () => {
-    const email = loginEmail.value.trim(),
-          password = loginPassword.value.trim();
+    const email = loginEmail.value.trim()
+     const password = loginPassword.value.trim();
     if (!isValidGmail(email)) {
-      alert("Enter a valid @gmail.com address.");
+      alert("Enter a valid Email address.");
       return;
     }
     if (email && password) {
@@ -60,8 +60,8 @@ const firebaseConfig = {
   
   
   signupBtn.addEventListener('click', () => {
-    const email = loginEmail.value.trim(),
-          password = loginPassword.value.trim();
+    const email = loginEmail.value.trim()
+    const password = loginPassword.value.trim();
     if (!isValidGmail(email)) {
       alert("Enter a valid @gmail.com address.");
       return;
@@ -101,9 +101,10 @@ const firebaseConfig = {
   aboutModal.addEventListener('click', e => { if (e.target === aboutModal) aboutModal.style.display = 'none'; });
   
   
-  const updatesModal = document.getElementById('updatesModal'),
-        updatesList = document.getElementById('updatesList');
+  const updatesModal = document.getElementById('updatesModal');
+  const updatesList = document.getElementById('updatesList');
   let updatesSocket = null;
+
   function openUpdatesModal() {
     updatesModal.style.display = 'flex';
     if (!updatesSocket) {
@@ -355,3 +356,9 @@ const firebaseConfig = {
     chatContainer.style.display = dashboardContainer.style.display = 'none';
   });
   
+  const hamburger = document.querySelector('.hamburger')
+  const slider = document.querySelector('.sidebar')
+
+  hamburger.addEventListener('click', () => {
+    slider.classList.toggle('activate')
+  })
