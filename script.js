@@ -13,20 +13,44 @@ document.addEventListener("DOMContentLoaded", function() {
         auth = firebase.auth(),
         storage = firebase.storage();
 
-  // Authentication state listener
+  // Avatar generation function
+  function generateAvatarInitial(name) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 100;
+    canvas.height = 100;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#007bff'; // Background color
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#ffffff'; // Text color
+    ctx.font = '48px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const initial = name ? name.charAt(0).toUpperCase() : '?';
+    ctx.fillText(initial, 50, 50);
+    return canvas.toDataURL();
+  }
+
+  // Modified authentication state listener with avatar generation
   auth.onAuthStateChanged(user => {
     const loginModal = document.getElementById("loginModal");
     loginModal.style.display = user ? "none" : "flex";
     if (user) {
       const profilePicElem = document.getElementById("profilePic");
-      if (profilePicElem)
-        profilePicElem.src = user.photoURL || "images/default-profile.png";
+      if (profilePicElem) {
+        if (user.photoURL) {
+          profilePicElem.src = user.photoURL;
+        } else {
+          const name = user.displayName || (user.email ? user.email.split('@')[0] : "Guest");
+          profilePicElem.src = generateAvatarInitial(name);
+        }
+      }
     }
   });
 
-  // Helper function to validate Gmail addresses
+  // Updated strict Gmail validation:
+  // Allow only letters, numbers, dots and underscores in the local-part.
   function isValidGmail(email) {
-    return /^[^@\s]+@gmail\.com$/i.test(email);
+    return /^[a-zA-Z0-9._]+@gmail\.com$/i.test(email);
   }
 
   // Simple escaping function to prevent XSS
@@ -36,6 +60,12 @@ document.addEventListener("DOMContentLoaded", function() {
       const escape = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
       return escape[match];
     });
+  }
+
+  // Forbidden content check function
+  function containsForbiddenContent(text) {
+    // Check if text contains "empathy" (case-insensitive)
+    return text.toLowerCase().includes("empathy");
   }
 
   // Login and Signup Elements
@@ -49,7 +79,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const email = loginEmail.value.trim(),
           password = loginPassword.value.trim();
     if (!isValidGmail(email)) {
-      alert("Enter a valid Email address.");
+      alert("Enter a valid @gmail.com address with only letters, numbers, dots, or underscores.");
       return;
     }
     if (email && password) {
@@ -78,7 +108,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const email = loginEmail.value.trim(),
           password = loginPassword.value.trim();
     if (!isValidGmail(email)) {
-      alert("Enter a valid @gmail.com address.");
+      alert("Enter a valid @gmail.com address with only letters, numbers, dots, or underscores.");
       return;
     }
     if (email && password) {
@@ -133,7 +163,6 @@ document.addEventListener("DOMContentLoaded", function() {
       updatesSocket.onopen = () => {};
       updatesSocket.onmessage = e => {
         if (!e.data.startsWith("Request served by")) {
-          // Use textContent for plain text insertion
           const li = document.createElement('li');
           li.textContent = e.data;
           updatesList.appendChild(li);
@@ -153,13 +182,14 @@ document.addEventListener("DOMContentLoaded", function() {
         dashboardEmail = document.getElementById('dashboardEmail'),
         dashboardCreditsSpan = document.getElementById('dashboardCredits'),
         chatContainer = document.getElementById('chatContainer'),
-        forumContainer = document.getElementById('forumContainer');
+        forumContainer = document.getElementById('forumContainer'),
+        chatMessagesDiv = document.getElementById('chatMessages');
   document.getElementById('dashboardBtn').addEventListener('click', async () => {
     const user = firebase.auth().currentUser;
     if (user) {
-      dashboardUsername.textContent = user.displayName || user.email.split('@')[0] || "Anonymous";
+      dashboardUsername.textContent = user.displayName || (user.email ? user.email.split('@')[0] : "Anonymous");
       dashboardEmail.textContent = user.email;
-      const userKey = user.displayName || user.email.split('@')[0];
+      const userKey = user.displayName || (user.email ? user.email.split('@')[0] : "Anonymous");
       if (userKey) {
         const docSnap = await firestore.collection("users").doc(userKey).get();
         dashboardCreditsSpan.textContent = docSnap.exists ? (docSnap.data().credits || 0) : 0;
@@ -196,14 +226,12 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Utility Function for Linkifying (now escapes text)
+  // Utility Function for Linkifying (with escaping)
   function linkify(text) {
-    // Escape any HTML from user input before replacing URLs
     return escapeHTML(text).replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
   }
 
-  // Updated renderMedia function with overlay support for images.
-  // For images, we wrap the tag in a clickable link that calls openOverlay.
+  // Render media with overlay support for images
   function renderMedia(url, type) {
     if (!url || !type) return "";
     if (type === "sticker") {
@@ -237,7 +265,18 @@ document.addEventListener("DOMContentLoaded", function() {
   forumSubmit.addEventListener('click', async () => {
     const text = forumInput.value.trim(),
           user = firebase.auth().currentUser,
-          userName = user ? (user.displayName || user.email.split('@')[0]) : "Anonymous";
+          userName = user ? (user.displayName || (user.email ? user.email.split('@')[0] : "Anonymous")) : "Anonymous",
+          userId = user ? user.uid : null;
+    // Prevent empty posts
+    if (!text) {
+      alert("Cannot send an empty post.");
+      return;
+    }
+    // Prevent posts that contain forbidden content
+    if (containsForbiddenContent(text)) {
+      alert("Empathy messages are not allowed.");
+      return;
+    }
     let fileUrl = "", fileType = "";
     const file = document.getElementById('forumFile').files[0];
     if (file) {
@@ -247,8 +286,9 @@ document.addEventListener("DOMContentLoaded", function() {
       fileType = file.type;
     }
     firestore.collection("forumPosts").add({
+      uid: userId,
       userName, 
-      text: escapeHTML(text), // store escaped text
+      text: escapeHTML(text),
       fileUrl, 
       fileType,
       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
@@ -266,13 +306,16 @@ document.addEventListener("DOMContentLoaded", function() {
     .onSnapshot(snapshot => {
       forumPosts.innerHTML = "";
       snapshot.forEach(doc => {
-        const data = doc.data(),
-              mediaHtml = data.fileUrl ? renderMedia(data.fileUrl, data.fileType) : "";
+        const data = doc.data();
+        const currentUser = firebase.auth().currentUser;
+        const canDelete = currentUser && currentUser.uid === data.uid;
+        const mediaHtml = data.fileUrl ? renderMedia(data.fileUrl, data.fileType) : "";
         forumPosts.innerHTML += `
-          <div class="forum-post">
+          <div class="forum-post" data-id="${doc.id}">
             <strong style="font-size:16px; display:flex; align-items:center; gap:10px;">
               <i class="ri-corner-left-down-line" style="font-size:26px;"></i>${escapeHTML(data.userName) || "Anonymous"}
               <em style="font-size:12px;">(${data.time || "Just now"})</em>
+              ${canDelete ? `<button class="delete-forum-post" data-id="${doc.id}">Delete</button>` : ""}
             </strong>
             <p style="font-size:14px; line-height:20px;">${linkify(data.text)}</p>
             ${mediaHtml}
@@ -281,8 +324,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
   // Chat Message Handling
-  const chatMessagesDiv = document.getElementById('chatMessages'),
-        chatInput = document.getElementById('chatInput'),
+  const chatInput = document.getElementById('chatInput'),
         chatSendBtn = document.getElementById('chatSendBtn'),
         typingLoader = document.getElementById('typingLoader'),
         typingStatusCollection = firestore.collection("typingStatus");
@@ -294,7 +336,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if (!user) return;
     const userDoc = typingStatusCollection.doc(user.uid);
     if (chatInput.value.trim() !== "") {
-      userDoc.set({ typing: true, userName: user.displayName || user.email.split('@')[0] });
+      userDoc.set({ typing: true, userName: user.displayName || (user.email ? user.email.split('@')[0] : "Anonymous") });
       clearTimeout(typingTimeout);
       typingTimeout = setTimeout(() => { userDoc.set({ typing: false }); }, 3000);
     } else {
@@ -302,20 +344,18 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Listen for the "Enter" key on the chat input (sending message on Enter)
+  // Send message on Enter key (unless using Shift+Enter)
   chatInput.addEventListener('keydown', function(e) {
-    console.log("Key pressed:", e.key, e.keyCode);
     if ((e.key === "Enter" || e.keyCode === 13) && !e.shiftKey) {
       e.preventDefault();
-      console.log("Enter key detected. Sending message...");
       chatSendBtn.click();
     }
   });
+  
   function sanitizeInput(input) {
     return input.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
+  }
 
-  
   typingStatusCollection.onSnapshot(snapshot => {
     let typingUsers = [];
     snapshot.forEach(doc => {
@@ -378,7 +418,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if (e.target.tagName.toLowerCase() === "img") {
       const stickerUrl = e.target.dataset.sticker,
             user = firebase.auth().currentUser,
-            userName = user ? (user.displayName || user.email.split('@')[0]) : "Guest",
+            userName = user ? (user.displayName || (user.email ? user.email.split('@')[0] : "Guest")) : "Guest",
             photoURL = user ? user.photoURL || "" : "";
       try {
         await firestore.collection("chats").add({
@@ -401,8 +441,18 @@ document.addEventListener("DOMContentLoaded", function() {
   chatSendBtn.addEventListener('click', async () => {
     const messageText = chatInput.value.trim(),
           user = firebase.auth().currentUser,
-          userName = user ? (user.displayName || user.email.split('@')[0]) : "Guest",
+          userName = user ? (user.displayName || (user.email ? user.email.split('@')[0] : "Guest")) : "Guest",
           photoURL = user ? user.photoURL || "" : "";
+    // Prevent sending empty messages
+    if (!messageText) {
+      alert("Cannot send an empty message.");
+      return;
+    }
+    // Prevent chat messages that contain forbidden content
+    if (containsForbiddenContent(messageText)) {
+      alert("Empathy messages are not allowed.");
+      return;
+    }
     let fileUrl = "", fileType = "";
     const file = document.getElementById('chatFile').files[0];
     if (file) {
@@ -414,7 +464,7 @@ document.addEventListener("DOMContentLoaded", function() {
     firestore.collection("chats").add({
       uid: user ? user.uid : null,
       userName,
-      text: escapeHTML(messageText), // store escaped text
+      text: escapeHTML(messageText),
       photoURL,
       fileUrl,
       fileType,
@@ -425,21 +475,24 @@ document.addEventListener("DOMContentLoaded", function() {
     }).catch(err => console.error(err));
   });
 
-  // Display Chat Messages
+  // Modified Display Chat Messages with avatar generation and delete button
   firestore.collection("chats").orderBy("timestamp", "asc")
     .onSnapshot(snapshot => {
       chatMessagesDiv.innerHTML = "";
       snapshot.forEach(doc => {
-        const data = doc.data(),
-              profileImg = data.photoURL 
-                ? `<img src="${data.photoURL}" style="width:40px; height:40px; border-radius:50%; margin-right:5px;">`
-                : `<img src="images/default-profile.png" style="width:40px; height:40px; border-radius:50%; margin-right:5px;">`,
-              mediaHtml = data.fileUrl ? renderMedia(data.fileUrl, data.fileType) : "";
+        const data = doc.data();
+        const currentUser = firebase.auth().currentUser;
+        const canDelete = currentUser && currentUser.uid === data.uid;
+        const profileImg = data.photoURL 
+          ? `<img src="${data.photoURL}" style="width:40px; height:40px; border-radius:50%; margin-right:5px;">`
+          : `<img src="${generateAvatarInitial(data.userName)}" style="width:40px; height:40px; border-radius:50%; margin-right:5px;">`;
+        const mediaHtml = data.fileUrl ? renderMedia(data.fileUrl, data.fileType) : "";
         chatMessagesDiv.innerHTML += `
-          <div class="chat-message">
+          <div class="chat-message" data-id="${doc.id}">
             <div style="display:flex; flex-direction: column; margin-bottom:10px;">
               <strong style="position: relative; left: 30px; top: 17px; width: 90%; transition: all ease-in 0.2s;" class="user__name">
                 ${escapeHTML(data.userName)}:
+                ${canDelete ? `<button class="delete-chat-post" data-id="${doc.id}">Delete</button>` : ""}
               </strong>
               <i class="ri-corner-left-down-line" style="font-size:26px;"></i>
               <div style="width: 100%; display: flex; align-items: center; gap: 10px;">
@@ -462,7 +515,7 @@ document.addEventListener("DOMContentLoaded", function() {
     chatContainer.style.display = dashboardContainer.style.display = 'none';
   });
 
-  // Expose overlay functions globally so they can be called from event listeners
+  // Expose overlay function globally
   window.openOverlay = function(imageUrl) {
     const overlay = document.getElementById("imageOverlay");
     const overlayImage = document.getElementById("overlayImage");
@@ -474,12 +527,33 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("imageOverlay").style.display = "none";
   });
 
-  // Delegate click events for image overlay links (safer than inline onclick)
+  // Updated event delegation for image overlay links (using closest())
   document.addEventListener('click', function(e) {
-    if (e.target.matches('.img-overlay-link')) {
+    const overlayLink = e.target.closest('.img-overlay-link');
+    if (overlayLink) {
       e.preventDefault();
-      const imageUrl = decodeURIComponent(e.target.getAttribute('data-image'));
+      const imageUrl = decodeURIComponent(overlayLink.getAttribute('data-image'));
       openOverlay(imageUrl);
+    }
+  });
+
+  // Global event delegation for delete buttons on forum and chat posts
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('delete-forum-post')) {
+      const id = e.target.getAttribute('data-id');
+      if (confirm("Are you sure you want to delete this forum post?")) {
+        firestore.collection("forumPosts").doc(id).delete()
+          .then(() => console.log("Forum post deleted"))
+          .catch(err => console.error("Error deleting forum post", err));
+      }
+    }
+    if (e.target.classList.contains('delete-chat-post')) {
+      const id = e.target.getAttribute('data-id');
+      if (confirm("Are you sure you want to delete this chat message?")) {
+        firestore.collection("chats").doc(id).delete()
+          .then(() => console.log("Chat message deleted"))
+          .catch(err => console.error("Error deleting chat message", err));
+      }
     }
   });
 });
