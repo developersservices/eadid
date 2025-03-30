@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function() {
-  // Firebase configuration and initialization
   const firebaseConfig = {
     apiKey: "AIzaSyA1kGDOAuQRqdgXHX3Ugjj_zL7_bqYXos0",
     authDomain: "myapp-3a874.firebaseapp.com",
@@ -13,15 +12,14 @@ document.addEventListener("DOMContentLoaded", function() {
         auth = firebase.auth(),
         storage = firebase.storage();
 
-  // Avatar generation function
   function generateAvatarInitial(name) {
     const canvas = document.createElement('canvas');
     canvas.width = 100;
     canvas.height = 100;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#007bff'; // Background color
+    ctx.fillStyle = '#007bff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#ffffff'; // Text color
+    ctx.fillStyle = '#ffffff';
     ctx.font = '48px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -30,7 +28,6 @@ document.addEventListener("DOMContentLoaded", function() {
     return canvas.toDataURL();
   }
 
-  // Modified authentication state listener with avatar generation
   auth.onAuthStateChanged(user => {
     const loginModal = document.getElementById("loginModal");
     loginModal.style.display = user ? "none" : "flex";
@@ -47,13 +44,10 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Updated strict Gmail validation:
-  // Allow only letters, numbers, dots and underscores in the local-part.
   function isValidGmail(email) {
     return /^[a-zA-Z0-9._]+@gmail\.com$/i.test(email);
   }
 
-  // Simple escaping function to prevent XSS
   function escapeHTML(str) {
     if (!str) return "";
     return str.replace(/[&<>"']/g, function(match) {
@@ -68,18 +62,15 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // Forbidden content check function (blocking "empathy")
   function containsForbiddenContent(text) {
     return text.toLowerCase().includes("empathy");
   }
 
-  // Login and Signup Elements
   const loginBtn = document.getElementById('loginBtn'),
         signupBtn = document.getElementById('signupBtn'),
         loginEmail = document.getElementById('loginEmail'),
         loginPassword = document.getElementById('loginPassword');
 
-  // Login Event
   loginBtn.addEventListener('click', () => {
     const email = loginEmail.value.trim(),
           password = loginPassword.value.trim();
@@ -108,7 +99,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Signup Event
   signupBtn.addEventListener('click', () => {
     const email = loginEmail.value.trim(),
           password = loginPassword.value.trim();
@@ -131,7 +121,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Google Login Event
   const googleLoginBtn = document.getElementById('googleLoginBtn');
   googleLoginBtn.addEventListener('click', () => {
     const provider = new firebase.auth.GoogleAuthProvider();
@@ -142,7 +131,6 @@ document.addEventListener("DOMContentLoaded", function() {
       .catch(err => alert(`Google Login Error: ${err.code} - ${err.message}`));
   });
 
-  // Window controls and sidebar toggling
   document.getElementById('minimizeBtn').addEventListener('click', () => window.windowControls.minimize());
   document.getElementById('maximizeBtn').addEventListener('click', () => window.windowControls.maximize());
   document.getElementById('closeBtn').addEventListener('click', () => window.windowControls.close());
@@ -151,13 +139,11 @@ document.addEventListener("DOMContentLoaded", function() {
     document.querySelector('.sidebar').classList.toggle('activate');
   });
 
-  // About Modal Events
   const aboutModal = document.getElementById('aboutModal');
   document.getElementById('aboutBtn').addEventListener('click', () => aboutModal.style.display = 'flex');
   document.getElementById('closeAboutModal').addEventListener('click', () => aboutModal.style.display = 'none');
   aboutModal.addEventListener('click', e => { if (e.target === aboutModal) aboutModal.style.display = 'none'; });
 
-  // Updates Modal Events
   const updatesModal = document.getElementById('updatesModal'),
         updatesList = document.getElementById('updatesList');
   let updatesSocket = null;
@@ -181,7 +167,6 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById('closeUpdatesModal').addEventListener('click', () => updatesModal.style.display = 'none');
   updatesModal.addEventListener('click', e => { if (e.target === updatesModal) updatesModal.style.display = 'none'; });
 
-  // Dashboard, Chat, and Forum Elements
   const dashboardContainer = document.getElementById('dashboardContainer'),
         dashboardUsername = document.getElementById('dashboardUsername'),
         dashboardEmail = document.getElementById('dashboardEmail'),
@@ -206,7 +191,6 @@ document.addEventListener("DOMContentLoaded", function() {
     dashboardContainer.style.display = 'flex';
   });
 
-  // Upload Profile Picture
   document.getElementById('uploadPicBtn').addEventListener('click', async () => {
     const file = document.getElementById('profilePicInput').files[0],
           user = firebase.auth().currentUser,
@@ -231,12 +215,10 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Utility Function for Linkifying (with escaping)
   function linkify(text) {
     return escapeHTML(text).replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
   }
 
-  // Render media with overlay support for images
   function renderMedia(url, type) {
     if (!url || !type) return "";
     if (type === "sticker") {
@@ -262,7 +244,6 @@ document.addEventListener("DOMContentLoaded", function() {
     return "";
   }
 
-  // Forum Post Handling
   const forumInput = document.getElementById('forumInput'),
         forumSubmit = document.getElementById('forumSubmit'),
         forumPosts = document.getElementById('forumPosts');
@@ -272,12 +253,12 @@ document.addEventListener("DOMContentLoaded", function() {
           user = firebase.auth().currentUser,
           userName = user ? (user.displayName || (user.email ? user.email.split('@')[0] : "Anonymous")) : "Anonymous",
           userId = user ? user.uid : null;
-    // Prevent empty posts
+
     if (!text) {
       alert("Cannot send an empty post.");
       return;
     }
-    // Prevent posts with forbidden content (e.g. "empathy")
+
     if (containsForbiddenContent(text)) {
       alert("Empathy messages are not allowed.");
       return;
@@ -290,6 +271,7 @@ document.addEventListener("DOMContentLoaded", function() {
       fileUrl = await fileRef.getDownloadURL();
       fileType = file.type;
     }
+
     firestore.collection("forumPosts").add({
       uid: userId,
       userName, 
@@ -328,14 +310,12 @@ document.addEventListener("DOMContentLoaded", function() {
       });
     });
 
-  // Chat Message Handling
   const chatInput = document.getElementById('chatInput'),
         chatSendBtn = document.getElementById('chatSendBtn'),
         typingLoader = document.getElementById('typingLoader'),
         typingStatusCollection = firestore.collection("typingStatus");
   let typingTimeout;
 
-  // Update typing status for chat
   chatInput.addEventListener('input', () => {
     const user = firebase.auth().currentUser;
     if (!user) return;
@@ -349,7 +329,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Send chat message on Enter (unless Shift+Enter)
   chatInput.addEventListener('keydown', function(e) {
     if ((e.key === "Enter" || e.keyCode === 13) && !e.shiftKey) {
       e.preventDefault();
@@ -374,7 +353,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Emoji and Sticker Picker Handling
+
   document.getElementById('emojiToggle').addEventListener('click', () => {
     const emojiPicker = document.getElementById('emojiPicker'),
           stickerPicker = document.getElementById('stickerPicker');
@@ -438,18 +417,17 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Chat Send Button Handling
   chatSendBtn.addEventListener('click', async () => {
     const messageText = chatInput.value.trim(),
           user = firebase.auth().currentUser,
           userName = user ? (user.displayName || (user.email ? user.email.split('@')[0] : "Guest")) : "Guest",
           photoURL = user ? user.photoURL || "" : "";
-    // Prevent sending empty messages
+
     if (!messageText) {
       alert("Cannot send an empty message.");
       return;
     }
-    // Prevent chat messages with forbidden content
+
     if (containsForbiddenContent(messageText)) {
       alert("Empathy messages are not allowed.");
       return;
@@ -476,7 +454,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }).catch(err => console.error(err));
   });
 
-  // Modified Display Chat Messages with avatar generation and delete button
+
   firestore.collection("chats").orderBy("timestamp", "asc")
     .onSnapshot(snapshot => {
       chatMessagesDiv.innerHTML = "";
@@ -506,7 +484,6 @@ document.addEventListener("DOMContentLoaded", function() {
       chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
     });
 
-  // Navigation between Chat and Forum
   document.getElementById('chatBtn').addEventListener('click', () => {
     chatContainer.style.display = 'flex';
     forumContainer.style.display = dashboardContainer.style.display = 'none';
@@ -516,7 +493,6 @@ document.addEventListener("DOMContentLoaded", function() {
     chatContainer.style.display = dashboardContainer.style.display = 'none';
   });
 
-  // Expose overlay function globally
   window.openOverlay = function(imageUrl) {
     const overlay = document.getElementById("imageOverlay");
     const overlayImage = document.getElementById("overlayImage");
@@ -528,7 +504,6 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("imageOverlay").style.display = "none";
   });
 
-  // Updated event delegation for image overlay links (using closest())
   document.addEventListener('click', function(e) {
     const overlayLink = e.target.closest('.img-overlay-link');
     if (overlayLink) {
@@ -538,7 +513,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Global event delegation for delete buttons on forum and chat posts
   document.addEventListener('click', function(e) {
     if (e.target.classList.contains('delete-forum-post')) {
       const id = e.target.getAttribute('data-id');
