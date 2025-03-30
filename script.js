@@ -311,6 +311,10 @@ document.addEventListener("DOMContentLoaded", function() {
       chatSendBtn.click();
     }
   });
+  function sanitizeInput(input) {
+    return input.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
   
   typingStatusCollection.onSnapshot(snapshot => {
     let typingUsers = [];
