@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function() {
         auth = firebase.auth(),
         storage = firebase.storage();
 
-  // Generate avatar from initial
+  // Generate avatar from initial letter
   function generateAvatarInitial(name) {
     const canvas = document.createElement('canvas');
     canvas.width = 100;
@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", function() {
     return canvas.toDataURL();
   }
 
-  // Auth state change
+  // Listen for auth state changes
   auth.onAuthStateChanged(user => {
     const loginModal = document.getElementById("loginModal");
     loginModal.style.display = user ? "none" : "flex";
@@ -48,9 +48,14 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Strict Gmail validation (adjust regex if you want to allow plus signs)
-  function isValidGmail(email) {
-    return /^[a-zA-Z0-9._]+@gmail\.com$/i.test(email);
+  // Enhanced email validation function (allowed domains: gmail.com & example.com)
+  function isValidEmail(email) {
+    const allowedDomains = ['gmail.com', 'example.com'];
+    const emailRegex = /^[a-zA-Z0-9._]+@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$/;
+    const match = email.match(emailRegex);
+    if (!match) return false;
+    const domain = match[1].toLowerCase();
+    return allowedDomains.includes(domain);
   }
 
   // Escape HTML to prevent XSS
@@ -68,23 +73,58 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // Forbid "empathy" content
+  // Forbid specific content (e.g., "empathy")
   function containsForbiddenContent(text) {
     return text.toLowerCase().includes("empathy");
   }
 
-  // DOM elements for login/signup
+  // ------------------------------
+  // MENTION & LINK PARSING FUNCTION
+  // ------------------------------
+  function parseMentionsAndLinks(text) {
+    if (!text) return "";
+
+    // 1. Escape HTML
+    const escaped = text.replace(/[&<>"']/g, function(match) {
+      const escapeMap = { 
+        '&': '&amp;', 
+        '<': '&lt;', 
+        '>': '&gt;', 
+        '"': '&quot;', 
+        "'": '&#39;' 
+      };
+      return escapeMap[match];
+    });
+
+    // 2. Linkify URLs
+    const linkified = escaped.replace(
+      /(https?:\/\/[^\s]+)/g,
+      '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+    );
+
+    // 3. Wrap mentions (@username) in a span with class "mention"
+    const mentionified = linkified.replace(
+      /@([\w.]+)/g,
+      '<span class="mention" data-user="$1">@$1</span>'
+    );
+
+    return mentionified;
+  }
+
+  // ------------------------------
+  // DOM ELEMENTS for Login/Signup
+  // ------------------------------
   const loginBtn = document.getElementById('loginBtn'),
         signupBtn = document.getElementById('signupBtn'),
         loginEmail = document.getElementById('loginEmail'),
         loginPassword = document.getElementById('loginPassword');
 
-  // Login
+  // Login handler
   loginBtn.addEventListener('click', () => {
     const email = loginEmail.value.trim(),
           password = loginPassword.value.trim();
-    if (!isValidGmail(email)) {
-      alert("Enter a valid @gmail.com address with only letters, numbers, dots, or underscores.");
+    if (!isValidEmail(email)) {
+      alert("Enter a valid email address from an allowed domain (e.g. gmail.com).");
       return;
     }
     if (email && password) {
@@ -108,12 +148,12 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Signup
+  // Signup handler
   signupBtn.addEventListener('click', () => {
     const email = loginEmail.value.trim(),
           password = loginPassword.value.trim();
-    if (!isValidGmail(email)) {
-      alert("Enter a valid @gmail.com address with only letters, numbers, dots, or underscores.");
+    if (!isValidEmail(email)) {
+      alert("Enter a valid email address from an allowed domain (e.g. gmail.com).");
       return;
     }
     if (email && password) {
@@ -142,12 +182,13 @@ document.addEventListener("DOMContentLoaded", function() {
       .catch(err => alert(`Google Login Error: ${err.code} - ${err.message}`));
   });
 
-  // Window controls
+  // ------------------------------
+  // Window Controls & Sidebar
+  // ------------------------------
   document.getElementById('minimizeBtn').addEventListener('click', () => window.windowControls.minimize());
   document.getElementById('maximizeBtn').addEventListener('click', () => window.windowControls.maximize());
   document.getElementById('closeBtn').addEventListener('click', () => window.windowControls.close());
 
-  // Sidebar toggle
   document.querySelector('.hamburger').addEventListener('click', () => {
     document.querySelector('.sidebar').classList.toggle('activate');
   });
@@ -160,33 +201,51 @@ document.addEventListener("DOMContentLoaded", function() {
     if (e.target === aboutModal) aboutModal.style.display = 'none';
   });
 
-  // Updates Modal with WebSocket
+  // ------------------------------
+  // Updates Modal with WebSocket & Update Indicator
+  // ------------------------------
   const updatesModal = document.getElementById('updatesModal'),
-        updatesList = document.getElementById('updatesList');
+        updatesList = document.getElementById('updatesList'),
+        updateIndicator = document.getElementById('updateIndicator'); // red dot element
   let updatesSocket = null;
+
   function openUpdatesModal() {
     updatesModal.style.display = 'flex';
+    // Hide the red dot when the modal is opened
+    updateIndicator.style.display = 'none';
     if (!updatesSocket) {
       updatesSocket = new WebSocket("wss://echo.websocket.org/updates");
       updatesSocket.onopen = () => {};
       updatesSocket.onmessage = e => {
-        if (!e.data.startsWith("Request served by")) {
-          const li = document.createElement('li');
-          li.textContent = e.data;
-          updatesList.appendChild(li);
+        // Ignore any message that starts with "Request served by"
+        if (e.data.startsWith("Request served by")) {
+          return;
+        }
+        // Otherwise, append it to the updates list
+        const li = document.createElement('li');
+        li.textContent = e.data;
+        updatesList.appendChild(li);
+      
+        // Show the update indicator if the modal is not currently open
+        if (updatesModal.style.display !== 'flex') {
+          updateIndicator.style.display = 'block';
         }
       };
+      
       updatesSocket.onerror = err => console.error(err);
       updatesSocket.onclose = () => updatesSocket = null;
     }
   }
+
   document.getElementById('updatesBtn').addEventListener('click', openUpdatesModal);
   document.getElementById('closeUpdatesModal').addEventListener('click', () => updatesModal.style.display = 'none');
   updatesModal.addEventListener('click', e => {
     if (e.target === updatesModal) updatesModal.style.display = 'none';
   });
 
-  // Dashboard, Chat, Forum elements
+  // ------------------------------
+  // Dashboard, Chat, Forum Elements
+  // ------------------------------
   const dashboardContainer = document.getElementById('dashboardContainer'),
         dashboardUsername = document.getElementById('dashboardUsername'),
         dashboardEmail = document.getElementById('dashboardEmail'),
@@ -195,7 +254,7 @@ document.addEventListener("DOMContentLoaded", function() {
         forumContainer = document.getElementById('forumContainer'),
         chatMessagesDiv = document.getElementById('chatMessages');
 
-  // Dashboard button
+  // Dashboard button click handler
   document.getElementById('dashboardBtn').addEventListener('click', async () => {
     const user = firebase.auth().currentUser;
     if (user) {
@@ -234,12 +293,13 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Linkify function
+  // ------------------------------
+  // Linkify & Render Media Helpers
+  // ------------------------------
   function linkify(text) {
     return escapeHTML(text).replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
   }
 
-  // Render media (image/video/sticker)
   function renderMedia(url, type) {
     if (!url || !type) return "";
     if (type === "sticker") {
@@ -265,12 +325,13 @@ document.addEventListener("DOMContentLoaded", function() {
     return "";
   }
 
-  // Forum elements
+  // ------------------------------
+  // Forum Section
+  // ------------------------------
   const forumInput = document.getElementById('forumInput'),
         forumSubmit = document.getElementById('forumSubmit'),
         forumPosts = document.getElementById('forumPosts');
 
-  // Submit forum post
   forumSubmit.addEventListener('click', async () => {
     const text = forumInput.value.trim(),
           user = firebase.auth().currentUser;
@@ -290,7 +351,6 @@ document.addEventListener("DOMContentLoaded", function() {
       fileUrl = await fileRef.getDownloadURL();
       fileType = file.type;
     }
-    // Use user.uid for data integrity in both posts and user credits
     const userName = user ? (user.displayName || (user.email ? user.email.split('@')[0] : "Anonymous")) : "Anonymous";
     firestore.collection("forumPosts").add({
       uid: user ? user.uid : null,
@@ -303,14 +363,12 @@ document.addEventListener("DOMContentLoaded", function() {
     }).then(() => {
       forumInput.value = "";
       document.getElementById('forumFile').value = "";
-      // Increment credits in the user's document (keyed by uid)
       firestore.collection("users").doc(user.uid).set({
         credits: firebase.firestore.FieldValue.increment(1)
       }, { merge: true });
     }).catch(err => console.error(err));
   });
 
-  // Listen to forum posts
   firestore.collection("forumPosts").orderBy("timestamp", "desc")
     .onSnapshot(snapshot => {
       forumPosts.innerHTML = "";
@@ -319,7 +377,6 @@ document.addEventListener("DOMContentLoaded", function() {
         const currentUser = firebase.auth().currentUser;
         const canDelete = currentUser && currentUser.uid === data.uid;
         const mediaHtml = data.fileUrl ? renderMedia(data.fileUrl, data.fileType) : "";
-        // Removed data-id from container; only add a data-doc-id attribute on the delete button.
         forumPosts.innerHTML += `
           <div class="forum-post">
             <strong style="font-size:16px; display:flex; align-items:center; gap:10px;">
@@ -334,14 +391,15 @@ document.addEventListener("DOMContentLoaded", function() {
       });
     });
 
-  // Chat elements
+  // ------------------------------
+  // Chat Section
+  // ------------------------------
   const chatInput = document.getElementById('chatInput'),
         chatSendBtn = document.getElementById('chatSendBtn'),
         typingLoader = document.getElementById('typingLoader'),
         typingStatusCollection = firestore.collection("typingStatus");
   let typingTimeout;
 
-  // Update typing status
   chatInput.addEventListener('input', () => {
     const user = firebase.auth().currentUser;
     if (!user) return;
@@ -355,7 +413,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Send chat message on Enter (unless shift)
   chatInput.addEventListener('keydown', function(e) {
     if ((e.key === "Enter" || e.keyCode === 13) && !e.shiftKey) {
       e.preventDefault();
@@ -381,7 +438,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Emoji & Sticker pickers
+  // Emoji & Sticker Pickers
   document.getElementById('emojiToggle').addEventListener('click', () => {
     const emojiPicker = document.getElementById('emojiPicker'),
           stickerPicker = document.getElementById('stickerPicker');
@@ -445,7 +502,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Send chat message
+  // Send Chat Message
   chatSendBtn.addEventListener('click', async () => {
     const messageText = chatInput.value.trim(),
           user = auth.currentUser,
@@ -467,10 +524,11 @@ document.addEventListener("DOMContentLoaded", function() {
       fileUrl = await fileRef.getDownloadURL();
       fileType = file.type;
     }
+    // Store raw text in Firestore
     firestore.collection("chats").add({
       uid: user ? user.uid : null,
       userName,
-      text: escapeHTML(messageText),
+      text: messageText,
       photoURL,
       fileUrl,
       fileType,
@@ -481,7 +539,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }).catch(err => console.error(err));
   });
 
-  // Listen to chat messages
   firestore.collection("chats").orderBy("timestamp", "asc")
     .onSnapshot(snapshot => {
       chatMessagesDiv.innerHTML = "";
@@ -493,18 +550,19 @@ document.addEventListener("DOMContentLoaded", function() {
           ? `<img src="${data.photoURL}" style="width:40px; height:40px; border-radius:50%; margin-right:5px;">`
           : `<img src="${generateAvatarInitial(data.userName)}" style="width:40px; height:40px; border-radius:50%; margin-right:5px;">`;
         const mediaHtml = data.fileUrl ? renderMedia(data.fileUrl, data.fileType) : "";
-        // Removed the container's data-id attribute
+        // Parse mentions and links in the chat message text
+        const messageHtml = parseMentionsAndLinks(data.text);
         chatMessagesDiv.innerHTML += `
           <div class="chat-message">
             <div style="display:flex; flex-direction: column; margin-bottom:10px;">
-              <strong style="position: relative; display: flex; align-items: center; justify-content: space-between; left: 30px; top: 17px; width: 90%; transition: all ease-in 0.2s;" class="user__name">
+              <strong style="position: relative; left: 30px; top: 17px; width: 90%; transition: all ease-in 0.2s;" class="user__name">
                 ${escapeHTML(data.userName)}:
-                ${canDelete ? `<i class="delete-chat-post ri-delete-bin-6-fill" style='cursor: pointer;' data-doc-id="${doc.id}"></i>` : ""}
+                ${canDelete ? `<button class="delete-chat-post" data-doc-id="${doc.id}">Delete</button>` : ""}
               </strong>
               <i class="ri-corner-left-down-line" style="font-size:26px;"></i>
               <div style="width: 100%; display: flex; align-items: center; gap: 10px;">
                 ${profileImg}
-                <span style="font-size:17px;">${linkify(data.text)}</span>
+                <span style="font-size:17px;">${messageHtml}</span>
               </div>
               ${mediaHtml}
             </div>
@@ -513,7 +571,9 @@ document.addEventListener("DOMContentLoaded", function() {
       chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
     });
 
-  // Nav between Chat & Forum
+  // ------------------------------
+  // Navigation Between Chat & Forum
+  // ------------------------------
   document.getElementById('chatBtn').addEventListener('click', () => {
     chatContainer.style.display = 'flex';
     forumContainer.style.display = dashboardContainer.style.display = 'none';
@@ -523,7 +583,9 @@ document.addEventListener("DOMContentLoaded", function() {
     chatContainer.style.display = dashboardContainer.style.display = 'none';
   });
 
-  // Image overlay
+  // ------------------------------
+  // Image Overlay
+  // ------------------------------
   window.openOverlay = function(imageUrl) {
     const overlay = document.getElementById("imageOverlay");
     const overlayImage = document.getElementById("overlayImage");
@@ -544,11 +606,12 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Delete forum and chat posts
+  // ------------------------------
+  // Delete Forum and Chat Posts
+  // ------------------------------
   document.addEventListener('click', async function(e) {
     // Delete forum post
     if (e.target.classList.contains('delete-forum-post')) {
-      // Now using data-doc-id instead of data-id
       const id = e.target.getAttribute('data-doc-id');
       if (!confirm("Are you sure you want to delete this forum post?")) return;
       const docRef = firestore.collection("forumPosts").doc(id);
@@ -567,7 +630,6 @@ document.addEventListener("DOMContentLoaded", function() {
         .then(() => console.log("Forum post deleted"))
         .catch(err => console.error("Error deleting forum post", err));
     }
-
     // Delete chat post
     if (e.target.classList.contains('delete-chat-post')) {
       const id = e.target.getAttribute('data-doc-id');
@@ -587,6 +649,17 @@ document.addEventListener("DOMContentLoaded", function() {
       docRef.delete()
         .then(() => console.log("Chat message deleted"))
         .catch(err => console.error("Error deleting chat message", err));
+    }
+  });
+
+  // ------------------------------
+  // Handle Clicks on Mentions (Optional)
+  // ------------------------------
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('mention')) {
+      const mentionedUser = e.target.getAttribute('data-user');
+      alert(`You clicked on mention: @${mentionedUser}`);
+      // Optionally, implement a profile view or direct message for the mentioned user.
     }
   });
 });
