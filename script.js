@@ -48,9 +48,8 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Strict Gmail validation
+  // Strict Gmail validation (adjust regex if you want to allow plus signs)
   function isValidGmail(email) {
-    // only letters, numbers, dots, underscores, plus @gmail.com
     return /^[a-zA-Z0-9._]+@gmail\.com$/i.test(email);
   }
 
@@ -161,7 +160,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if (e.target === aboutModal) aboutModal.style.display = 'none';
   });
 
-  // Updates Modal
+  // Updates Modal with WebSocket
   const updatesModal = document.getElementById('updatesModal'),
         updatesList = document.getElementById('updatesList');
   let updatesSocket = null;
@@ -200,15 +199,11 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById('dashboardBtn').addEventListener('click', async () => {
     const user = firebase.auth().currentUser;
     if (user) {
-      dashboardUsername.textContent = user.displayName || (user.email ? user.email.split('@')[0] : "Anonymous");
+      const name = user.displayName || (user.email ? user.email.split('@')[0] : "Anonymous");
+      dashboardUsername.textContent = name;
       dashboardEmail.textContent = user.email;
-      const userKey = user.displayName || (user.email ? user.email.split('@')[0] : "Anonymous");
-      if (userKey) {
-        const docSnap = await firestore.collection("users").doc(userKey).get();
-        dashboardCreditsSpan.textContent = docSnap.exists ? (docSnap.data().credits || 0) : 0;
-      } else {
-        dashboardCreditsSpan.textContent = 0;
-      }
+      const docSnap = await firestore.collection("users").doc(user.uid).get();
+      dashboardCreditsSpan.textContent = docSnap.exists ? (docSnap.data().credits || 0) : 0;
     }
     chatContainer.style.display = forumContainer.style.display = 'none';
     dashboardContainer.style.display = 'flex';
@@ -278,9 +273,7 @@ document.addEventListener("DOMContentLoaded", function() {
   // Submit forum post
   forumSubmit.addEventListener('click', async () => {
     const text = forumInput.value.trim(),
-          user = firebase.auth().currentUser,
-          userName = user ? (user.displayName || (user.email ? user.email.split('@')[0] : "Anonymous")) : "Anonymous",
-          userId = user ? user.uid : null;
+          user = firebase.auth().currentUser;
     if (!text) {
       alert("Cannot send an empty post.");
       return;
@@ -297,8 +290,10 @@ document.addEventListener("DOMContentLoaded", function() {
       fileUrl = await fileRef.getDownloadURL();
       fileType = file.type;
     }
+    // Use user.uid for data integrity in both posts and user credits
+    const userName = user ? (user.displayName || (user.email ? user.email.split('@')[0] : "Anonymous")) : "Anonymous";
     firestore.collection("forumPosts").add({
-      uid: userId,
+      uid: user ? user.uid : null,
       userName,
       text: escapeHTML(text),
       fileUrl,
@@ -308,7 +303,8 @@ document.addEventListener("DOMContentLoaded", function() {
     }).then(() => {
       forumInput.value = "";
       document.getElementById('forumFile').value = "";
-      firestore.collection("users").doc(userName).set({
+      // Increment credits in the user's document (keyed by uid)
+      firestore.collection("users").doc(user.uid).set({
         credits: firebase.firestore.FieldValue.increment(1)
       }, { merge: true });
     }).catch(err => console.error(err));
@@ -323,13 +319,14 @@ document.addEventListener("DOMContentLoaded", function() {
         const currentUser = firebase.auth().currentUser;
         const canDelete = currentUser && currentUser.uid === data.uid;
         const mediaHtml = data.fileUrl ? renderMedia(data.fileUrl, data.fileType) : "";
+        // Removed data-id from container; only add a data-doc-id attribute on the delete button.
         forumPosts.innerHTML += `
-          <div class="forum-post" data-id="${doc.id}">
+          <div class="forum-post">
             <strong style="font-size:16px; display:flex; align-items:center; gap:10px;">
               <i class="ri-corner-left-down-line" style="font-size:26px;"></i>
               ${escapeHTML(data.userName) || "Anonymous"}
               <em style="font-size:12px;">(${data.time || "Just now"})</em>
-              ${canDelete ? `<button class="delete-forum-post" data-id="${doc.id}">Delete</button>` : ""}
+              ${canDelete ? `<button class="delete-forum-post" data-doc-id="${doc.id}">Delete</button>` : ""}
             </strong>
             <p style="font-size:14px; line-height:20px;">${linkify(data.text)}</p>
             ${mediaHtml}
@@ -496,12 +493,13 @@ document.addEventListener("DOMContentLoaded", function() {
           ? `<img src="${data.photoURL}" style="width:40px; height:40px; border-radius:50%; margin-right:5px;">`
           : `<img src="${generateAvatarInitial(data.userName)}" style="width:40px; height:40px; border-radius:50%; margin-right:5px;">`;
         const mediaHtml = data.fileUrl ? renderMedia(data.fileUrl, data.fileType) : "";
+        // Removed the container's data-id attribute
         chatMessagesDiv.innerHTML += `
-          <div class="chat-message" data-id="${doc.id}">
+          <div class="chat-message">
             <div style="display:flex; flex-direction: column; margin-bottom:10px;">
-              <strong style="position: relative; left: 30px; top: 17px; width: 90%; transition: all ease-in 0.2s;" class="user__name">
+              <strong style="position: relative; display: flex; align-items: center; justify-content: space-between; left: 30px; top: 17px; width: 90%; transition: all ease-in 0.2s;" class="user__name">
                 ${escapeHTML(data.userName)}:
-                ${canDelete ? `<button class="delete-chat-post" data-id="${doc.id}">Delete</button>` : ""}
+                ${canDelete ? `<i class="delete-chat-post ri-delete-bin-6-fill" style='cursor: pointer;' data-doc-id="${doc.id}"></i>` : ""}
               </strong>
               <i class="ri-corner-left-down-line" style="font-size:26px;"></i>
               <div style="width: 100%; display: flex; align-items: center; gap: 10px;">
@@ -537,7 +535,6 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("imageOverlay").style.display = "none";
   });
 
-  // Delegation for image overlay
   document.addEventListener('click', function(e) {
     const overlayLink = e.target.closest('.img-overlay-link');
     if (overlayLink) {
@@ -547,10 +544,12 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Delegation for delete buttons (Forum & Chat) with ownership check
+  // Delete forum and chat posts
   document.addEventListener('click', async function(e) {
+    // Delete forum post
     if (e.target.classList.contains('delete-forum-post')) {
-      const id = e.target.getAttribute('data-id');
+      // Now using data-doc-id instead of data-id
+      const id = e.target.getAttribute('data-doc-id');
       if (!confirm("Are you sure you want to delete this forum post?")) return;
       const docRef = firestore.collection("forumPosts").doc(id);
       const docSnap = await docRef.get();
@@ -560,7 +559,6 @@ document.addEventListener("DOMContentLoaded", function() {
         alert("This post no longer exists.");
         return;
       }
-      // Double-check ownership
       if (!currentUser || currentUser.uid !== docData.uid) {
         alert("You do not have permission to delete this post.");
         return;
@@ -570,8 +568,9 @@ document.addEventListener("DOMContentLoaded", function() {
         .catch(err => console.error("Error deleting forum post", err));
     }
 
+    // Delete chat post
     if (e.target.classList.contains('delete-chat-post')) {
-      const id = e.target.getAttribute('data-id');
+      const id = e.target.getAttribute('data-doc-id');
       if (!confirm("Are you sure you want to delete this chat message?")) return;
       const docRef = firestore.collection("chats").doc(id);
       const docSnap = await docRef.get();
@@ -581,7 +580,6 @@ document.addEventListener("DOMContentLoaded", function() {
       }
       const docData = docSnap.data();
       const currentUser = auth.currentUser;
-      // Double-check ownership
       if (!currentUser || currentUser.uid !== docData.uid) {
         alert("You do not have permission to delete this message.");
         return;
