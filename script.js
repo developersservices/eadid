@@ -57,14 +57,19 @@ document.addEventListener("DOMContentLoaded", function() {
   function escapeHTML(str) {
     if (!str) return "";
     return str.replace(/[&<>"']/g, function(match) {
-      const escape = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+      const escape = { 
+        '&': '&amp;', 
+        '<': '&lt;', 
+        '>': '&gt;', 
+        '"': '&quot;', 
+        "'": '&#39;' 
+      };
       return escape[match];
     });
   }
 
-  // Forbidden content check function
+  // Forbidden content check function (blocking "empathy")
   function containsForbiddenContent(text) {
-    // Check if text contains "empathy" (case-insensitive)
     return text.toLowerCase().includes("empathy");
   }
 
@@ -272,7 +277,7 @@ document.addEventListener("DOMContentLoaded", function() {
       alert("Cannot send an empty post.");
       return;
     }
-    // Prevent posts that contain forbidden content
+    // Prevent posts with forbidden content (e.g. "empathy")
     if (containsForbiddenContent(text)) {
       alert("Empathy messages are not allowed.");
       return;
@@ -330,7 +335,7 @@ document.addEventListener("DOMContentLoaded", function() {
         typingStatusCollection = firestore.collection("typingStatus");
   let typingTimeout;
 
-  // Update typing status
+  // Update typing status for chat
   chatInput.addEventListener('input', () => {
     const user = firebase.auth().currentUser;
     if (!user) return;
@@ -344,17 +349,13 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Send message on Enter key (unless using Shift+Enter)
+  // Send chat message on Enter (unless Shift+Enter)
   chatInput.addEventListener('keydown', function(e) {
     if ((e.key === "Enter" || e.keyCode === 13) && !e.shiftKey) {
       e.preventDefault();
       chatSendBtn.click();
     }
   });
-  
-  function sanitizeInput(input) {
-    return input.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
 
   typingStatusCollection.onSnapshot(snapshot => {
     let typingUsers = [];
@@ -448,7 +449,7 @@ document.addEventListener("DOMContentLoaded", function() {
       alert("Cannot send an empty message.");
       return;
     }
-    // Prevent chat messages that contain forbidden content
+    // Prevent chat messages with forbidden content
     if (containsForbiddenContent(messageText)) {
       alert("Empathy messages are not allowed.");
       return;
