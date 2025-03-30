@@ -217,21 +217,21 @@ document.addEventListener("DOMContentLoaded", function() {
       updatesSocket = new WebSocket("wss://echo.websocket.org/updates");
       updatesSocket.onopen = () => {};
       updatesSocket.onmessage = e => {
-        // Ignore any message that starts with "Request served by"
-        if (e.data.startsWith("Request served by")) {
-          return;
-        }
-        // Otherwise, append it to the updates list
-        const li = document.createElement('li');
-        li.textContent = e.data;
-        updatesList.appendChild(li);
-      
-        // Show the update indicator if the modal is not currently open
-        if (updatesModal.style.display !== 'flex') {
-          updateIndicator.style.display = 'block';
-        }
-      };
-      
+  // Ignore any message that starts with "Request served by"
+  if (e.data.startsWith("Request served by")) {
+    return;
+  }
+  // Otherwise, append it to the updates list
+  const li = document.createElement('li');
+  li.textContent = e.data;
+  updatesList.appendChild(li);
+
+  // Show the update indicator if the modal is not currently open
+  if (updatesModal.style.display !== 'flex') {
+    updateIndicator.style.display = 'block';
+  }
+};
+
       updatesSocket.onerror = err => console.error(err);
       updatesSocket.onclose = () => updatesSocket = null;
     }
@@ -555,9 +555,9 @@ document.addEventListener("DOMContentLoaded", function() {
         chatMessagesDiv.innerHTML += `
           <div class="chat-message">
             <div style="display:flex; flex-direction: column; margin-bottom:10px;">
-              <strong style="position: relative; left: 30px; top: 17px; width: 90%; transition: all ease-in 0.2s;" class="user__name">
+              <strong style="position: relative; display:flex; align-items:center; justify-content: space-between; left: 30px; top: 17px; width: 90%; transition: all ease-in 0.2s;" class="user__name">
                 ${escapeHTML(data.userName)}:
-                ${canDelete ? `<button class="delete-chat-post" data-doc-id="${doc.id}">Delete</button>` : ""}
+                ${canDelete ? `<i class="delete-chat-post ri-delete-bin-7-line" style="cursor: pointer;" data-doc-id="${doc.id}"></i>` : ""}
               </strong>
               <i class="ri-corner-left-down-line" style="font-size:26px;"></i>
               <div style="width: 100%; display: flex; align-items: center; gap: 10px;">
