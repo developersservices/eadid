@@ -94,6 +94,7 @@ document.addEventListener("DOMContentLoaded", function() {
     return escaped;
   }
 
+  // Login and Signup Buttons
   const loginBtn = document.getElementById('loginBtn'),
         signupBtn = document.getElementById('signupBtn'),
         loginEmail = document.getElementById('loginEmail'),
@@ -157,6 +158,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
+  // Window Controls and Sidebar Toggle
   document.getElementById('minimizeBtn').addEventListener('click', () => window.windowControls.minimize());
   document.getElementById('maximizeBtn').addEventListener('click', () => window.windowControls.maximize());
   document.getElementById('closeBtn').addEventListener('click', () => window.windowControls.close());
@@ -164,6 +166,7 @@ document.addEventListener("DOMContentLoaded", function() {
     document.querySelector('.sidebar').classList.toggle('activate');
   });
 
+  // About Modal
   const aboutModal = document.getElementById('aboutModal');
   document.getElementById('aboutBtn').addEventListener('click', () => aboutModal.style.display = 'flex');
   document.getElementById('closeAboutModal').addEventListener('click', () => aboutModal.style.display = 'none');
@@ -171,6 +174,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if (e.target === aboutModal) aboutModal.style.display = 'none';
   });
 
+  // Navigation: Chat and Forum
   document.getElementById('chatBtn').addEventListener('click', () => {
     chatContainer.style.display = 'flex';
     forumContainer.style.display = 'none';
@@ -183,7 +187,7 @@ document.addEventListener("DOMContentLoaded", function() {
     dashboardContainer.style.display = 'none';
   });
   
-
+  // Updates Modal
   const updatesModal = document.getElementById('updatesModal'),
         updatesList = document.getElementById('updatesList'),
         updateIndicator = document.getElementById('updateIndicator');
@@ -215,6 +219,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if (e.target === updatesModal) updatesModal.style.display = 'none';
   });
 
+  // Containers and Dashboard Elements
   const dashboardContainer = document.getElementById('dashboardContainer'),
         dashboardUsername = document.getElementById('dashboardUsername'),
         dashboardEmail = document.getElementById('dashboardEmail'),
@@ -237,10 +242,12 @@ document.addEventListener("DOMContentLoaded", function() {
         await logSecurityEvent("dashboard_error", `Error fetching data for ${user.email}: ${err.message}`);
       }
     }
+    // Hide chat and forum containers when showing dashboard
     chatContainer.style.display = forumContainer.style.display = 'none';
     dashboardContainer.style.display = 'flex';
   });
 
+  // Upload Profile Picture
   document.getElementById('uploadPicBtn').addEventListener('click', async () => {
     const file = document.getElementById('profilePicInput').files[0],
           user = firebase.auth().currentUser,
@@ -295,6 +302,7 @@ document.addEventListener("DOMContentLoaded", function() {
     return "";
   }
 
+  // Forum Posting
   const forumInput = document.getElementById('forumInput'),
         forumSubmit = document.getElementById('forumSubmit'),
         forumPosts = document.getElementById('forumPosts');
@@ -364,74 +372,76 @@ document.addEventListener("DOMContentLoaded", function() {
       });
     });
 
+  // Chat Posting and Real-Time Listener using docChanges()
   const chatSendBtn = document.getElementById('chatSendBtn'),
         typingLoader = document.getElementById('typingLoader'),
         typingStatusCollection = firestore.collection("typingStatus");
   let typingTimeout;
   let chatLimit = 20;
   let chatUnsubscribe;
-
   let displayedMessageIds = new Set();
 
-function loadChatMessages() {
-  if (chatUnsubscribe) chatUnsubscribe();
-  const chatQuery = firestore
-    .collection("chats")
-    .orderBy("timestamp", "desc")
-    .limit(chatLimit);
-    
-  chatUnsubscribe = chatQuery.onSnapshot(snapshot => {
-    snapshot.docChanges().forEach(change => {
-      if (change.type === "added") {
-        const doc = change.doc;
-        // If already displayed, skip (can happen during pagination updates)
-        if (displayedMessageIds.has(doc.id)) return;
-        displayedMessageIds.add(doc.id);
-
-        const data = doc.data();
-        const currentUser = auth.currentUser;
-        const canDelete = currentUser && currentUser.uid === data.uid;
-        const profileImg = data.photoURL
-          ? `<img src="${data.photoURL}" style="width:40px; height:40px; border-radius:50%; margin-right:5px;">`
-          : `<img src="${generateAvatarInitial(data.userName)}" style="width:40px; height:40px; border-radius:50%; margin-right:5px;">`;
-        const mediaHtml = data.fileUrl ? renderMedia(data.fileUrl, data.fileType) : "";
-        const messageHtml = parseMentionsAndLinks(data.text);
-
-        // Create a new div for the message with the "chat-message" class that will pop in
-        const messageElem = document.createElement("div");
-        messageElem.classList.add("chat-message");
-        messageElem.innerHTML = `
-          <div style="display:flex; flex-direction: column; margin-bottom:10px;">
-            <strong style="position: relative; display:flex; align-items:center; justify-content: space-between; left: 30px; top: 17px; width: 90%; transition: all ease-in 0.2s;" class="user__name">
-              ${escapeHTML(data.userName)}:
-              ${canDelete ? `<i class="delete-chat-post ri-delete-bin-7-line" style="cursor: pointer;" data-doc-id="${doc.id}"></i>` : ""}
-            </strong>
-            <i class="ri-corner-left-down-line" style="font-size:26px;"></i>
-            <div style="width: 100%; display: flex; align-items: center; gap: 10px;">
-              ${profileImg}
-              <span style="font-size:17px;">${messageHtml}</span>
-            </div>
-            ${mediaHtml}
-          </div>`;
+  function loadChatMessages() {
+    if (chatUnsubscribe) chatUnsubscribe();
+    const chatQuery = firestore
+      .collection("chats")
+      .orderBy("timestamp", "desc")
+      .limit(chatLimit);
+      
+    chatUnsubscribe = chatQuery.onSnapshot(snapshot => {
+      snapshot.docChanges().forEach(change => {
+        if (change.type === "added") {
+          const doc = change.doc;
+          if (displayedMessageIds.has(doc.id)) return;
+          displayedMessageIds.add(doc.id);
           
-        chatMessagesDiv.appendChild(messageElem);
+          const data = doc.data();
+          const currentUser = auth.currentUser;
+          const canDelete = currentUser && currentUser.uid === data.uid;
+          const profileImg = data.photoURL
+            ? `<img src="${data.photoURL}" style="width:40px; height:40px; border-radius:50%; margin-right:5px;">`
+            : `<img src="${generateAvatarInitial(data.userName)}" style="width:40px; height:40px; border-radius:50%; margin-right:5px;">`;
+          const mediaHtml = data.fileUrl ? renderMedia(data.fileUrl, data.fileType) : "";
+          const messageHtml = parseMentionsAndLinks(data.text);
+  
+          const messageElem = document.createElement("div");
+          messageElem.classList.add("chat-message");
+          messageElem.innerHTML = `
+            <div style="display:flex; flex-direction: column; margin-bottom:10px;">
+              <strong style="position: relative; display:flex; align-items:center; justify-content: space-between; left: 30px; top: 17px; width: 90%; transition: all ease-in 0.2s;" class="user__name">
+                ${escapeHTML(data.userName)}:
+                ${canDelete ? `<i class="delete-chat-post ri-delete-bin-7-line" style="cursor: pointer;" data-doc-id="${doc.id}"></i>` : ""}
+              </strong>
+              <i class="ri-corner-left-down-line" style="font-size:26px;"></i>
+              <div style="width: 100%; display: flex; align-items: center; gap: 10px;">
+                ${profileImg}
+                <span style="font-size:17px;">${messageHtml}</span>
+              </div>
+              ${mediaHtml}
+            </div>`;
+          
+          // Append new message only if chat container is visible.
+          if (chatContainer.style.display !== 'none') {
+            chatMessagesDiv.appendChild(messageElem);
+          }
+        }
+      });
+      // Auto-scroll only if chat container is visible.
+      if (chatContainer.style.display !== 'none') {
+        chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
       }
     });
-    // Always scroll to the bottom after adding new messages
-    chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
-  });
-}
-
-
+  }
+  
   loadChatMessages();
-
+  
   chatMessagesDiv.addEventListener("scroll", function() {
     if (chatMessagesDiv.scrollTop === 0) {
       chatLimit += 20;
       loadChatMessages();
     }
   });
-
+  
   const chatInput = document.getElementById('chatInput');
   chatInput.addEventListener('input', () => {
     const user = auth.currentUser;
@@ -445,14 +455,14 @@ function loadChatMessages() {
       userDoc.set({ typing: false });
     }
   });
-
+  
   chatInput.addEventListener('keydown', function(e) {
     if ((e.key === "Enter" || e.keyCode === 13) && !e.shiftKey) {
       e.preventDefault();
       chatSendBtn.click();
     }
   });
-
+  
   typingStatusCollection.onSnapshot(snapshot => {
     let typingUsers = [];
     snapshot.forEach(doc => {
@@ -470,14 +480,14 @@ function loadChatMessages() {
       typingLoader.style.display = "none";
     }
   });
-
+  
   document.getElementById('emojiToggle').addEventListener('click', () => {
     const emojiPicker = document.getElementById('emojiPicker'),
           stickerPicker = document.getElementById('stickerPicker');
     emojiPicker.style.display = (emojiPicker.style.display === 'block') ? 'none' : 'block';
     stickerPicker.style.display = 'none';
   });
-
+  
   document.getElementById('stickerToggle').addEventListener('click', async () => {
     const stickerPicker = document.getElementById('stickerPicker');
     if (stickerPicker.style.display === 'block') {
@@ -504,13 +514,13 @@ function loadChatMessages() {
     stickerPicker.style.display = 'block';
     document.getElementById('emojiPicker').style.display = 'none';
   });
-
+  
   document.querySelectorAll('#emojiPicker span').forEach(emoji => {
     emoji.addEventListener('click', () => {
       chatInput.value += emoji.textContent;
     });
   });
-
+  
   document.getElementById('stickerPicker').addEventListener('click', async (e) => {
     if (e.target.tagName.toLowerCase() === "img") {
       const stickerUrl = e.target.dataset.sticker,
@@ -534,7 +544,7 @@ function loadChatMessages() {
       }
     }
   });
-
+  
   chatSendBtn.addEventListener('click', async () => {
     const messageText = chatInput.value.trim(),
           user = firebase.auth().currentUser,
@@ -574,12 +584,7 @@ function loadChatMessages() {
       await logSecurityEvent("chat_send_error", `Error sending chat message for ${user ? user.email : "Guest"}: ${err.message}`);
     }
   });
-
-  firestore.collection("chats").orderBy("timestamp", "asc")
-    .onSnapshot(snapshot => {
-      // This listener is not used for pagination (see loadChatMessages)
-    });
-
+  
   document.addEventListener('click', async function(e) {
     // Delete forum post
     if (e.target.classList.contains('delete-forum-post')) {
@@ -607,6 +612,7 @@ function loadChatMessages() {
       }
     }
     
+    // Delete chat message
     if (e.target.classList.contains('delete-chat-post')) {
       const id = e.target.getAttribute('data-doc-id');
       if (!confirm("Are you sure you want to delete this chat message?")) return;
@@ -632,12 +638,14 @@ function loadChatMessages() {
       }
     }
   });
-
+  
   document.addEventListener('click', (e) => {
     if (e.target.classList.contains('mention')) {
       const mentionedUser = e.target.getAttribute('data-user');
       alert(`You clicked on mention: @${mentionedUser}`);
     }
   });
+  
+  // Initialize chat messages listener
   loadChatMessages();
 });
