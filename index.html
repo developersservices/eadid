@@ -259,7 +259,7 @@
     .forum-post {
       padding: 5px;
       margin-bottom: 8px;
-      border-bottom: 1px solid var(--border-color);
+      border-bottom: 1px solid #4949494d;
     }
 
     .forum-form {
@@ -528,25 +528,60 @@
       cursor: pointer;
     }
 
-    @keyframes pop {
-  0% {
-    transform: scale(0.5);
-    opacity: 0;
-  }
-  60% {
-    transform: scale(1.1);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-  }
-}
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
 
-.chat-message {
-  animation: pop 0.4s ease-out;
-}
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
+    .chat-message {
+      animation: slideIn 0.5s ease forwards;
+    }
 
+    .search_container {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .search_container input {
+      width: 25vw;
+      height: 5vh;
+      outline: none;
+      border: none;
+      padding: 0 5px;
+      font-size: 17px;
+      border-radius: 20px;
+      background: transparent;
+      border: 1px solid #252525;
+      display: flex;
+      align-items: center;
+      color: #c2c2c2;
+    }
+
+    .search_container i {
+      outline: none;
+      border: none;
+      padding: 0 3px;
+      cursor: pointer;
+      font-size: 25px;
+    }
+
+    .highlight {
+      background-color: rgb(214, 214, 15);
+      color: #000;
+      padding: 1px;
+    }
+
+    .delete-forum-post{
+      cursor: pointer;
+    }
 
     @media (max-width: 400px) {
       .content {
@@ -623,6 +658,10 @@
         </div>
       </div>
       <div class="forum-container" id="forumContainer" style="display: none;">
+        <div class="search_container">
+          <input type="text" id="forumSearch" placeholder="Search forum posts...">
+          <i id="forumSearchBtn" class="ri-search-line"></i>
+        </div>
         <div class="forum-posts" id="forumPosts"></div>
         <div class="forum-form">
           <textarea id="forumInput" placeholder="Share your thoughts..." required></textarea>
