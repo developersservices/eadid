@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
   const firebaseConfig = {
     apiKey: "AIzaSyA1kGDOAuQRqdgXHX3Ugjj_zL7_bqYXos0",
     authDomain: "myapp-3a874.firebaseapp.com",
@@ -10,8 +10,8 @@ document.addEventListener("DOMContentLoaded", function() {
   firebase.initializeApp(firebaseConfig);
 
   const firestore = firebase.firestore(),
-        auth = firebase.auth(),
-        storage = firebase.storage();
+    auth = firebase.auth(),
+    storage = firebase.storage();
 
   // Global variable to hold forum posts data and current search query.
   let forumPostsData = [];
@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", function() {
     ctx.fillText(initial, 50, 50);
     return canvas.toDataURL();
   }
-  
+
   auth.onAuthStateChanged(user => {
     const loginModal = document.getElementById("loginModal");
     loginModal.style.display = user ? "none" : "flex";
@@ -141,13 +141,13 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   const loginBtn = document.getElementById("loginBtn"),
-        signupBtn = document.getElementById("signupBtn"),
-        loginEmail = document.getElementById("loginEmail"),
-        loginPassword = document.getElementById("loginPassword");
+    signupBtn = document.getElementById("signupBtn"),
+    loginEmail = document.getElementById("loginEmail"),
+    loginPassword = document.getElementById("loginPassword");
 
   loginBtn.addEventListener("click", async () => {
     const email = loginEmail.value.trim(),
-          password = loginPassword.value.trim();
+      password = loginPassword.value.trim();
     if (!isValidEmail(email)) {
       alert("Enter a valid email address from an allowed domain (e.g. gmail.com).");
       return;
@@ -173,7 +173,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   signupBtn.addEventListener("click", async () => {
     const email = loginEmail.value.trim(),
-          password = loginPassword.value.trim();
+      password = loginPassword.value.trim();
     if (!isValidEmail(email)) {
       alert("Enter a valid email address from an allowed domain (e.g. gmail.com).");
       return;
@@ -224,16 +224,16 @@ document.addEventListener("DOMContentLoaded", function() {
     forumContainer.style.display = "none";
     dashboardContainer.style.display = "none";
   });
-  
+
   document.getElementById("forumBtn").addEventListener("click", () => {
     forumContainer.style.display = "flex";
     chatContainer.style.display = "none";
     dashboardContainer.style.display = "none";
   });
-  
+
   const updatesModal = document.getElementById("updatesModal"),
-        updatesList = document.getElementById("updatesList"),
-        updateIndicator = document.getElementById("updateIndicator");
+    updatesList = document.getElementById("updatesList"),
+    updateIndicator = document.getElementById("updateIndicator");
   let updatesSocket = null;
 
   function openUpdatesModal() {
@@ -241,7 +241,7 @@ document.addEventListener("DOMContentLoaded", function() {
     updateIndicator.style.display = "none";
     if (!updatesSocket) {
       updatesSocket = new WebSocket("wss://echo.websocket.org/updates");
-      updatesSocket.onopen = () => {};
+      updatesSocket.onopen = () => { };
       updatesSocket.onmessage = e => {
         if (e.data.startsWith("Request served by")) return;
         const li = document.createElement("li");
@@ -313,7 +313,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const filtered = forumPostsData.filter(doc => {
       const data = doc.data;
       return (data.text && data.text.toLowerCase().includes(query)) ||
-             (data.userName && data.userName.toLowerCase().includes(query));
+        (data.userName && data.userName.toLowerCase().includes(query));
     });
     renderForumPosts(filtered);
   });
@@ -333,12 +333,12 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   const dashboardContainer = document.getElementById("dashboardContainer"),
-        dashboardUsername = document.getElementById("dashboardUsername"),
-        dashboardEmail = document.getElementById("dashboardEmail"),
-        dashboardCreditsSpan = document.getElementById("dashboardCredits"),
-        chatContainer = document.getElementById("chatContainer"),
-        forumContainer = document.getElementById("forumContainer"),
-        chatMessagesDiv = document.getElementById("chatMessages");
+    dashboardUsername = document.getElementById("dashboardUsername"),
+    dashboardEmail = document.getElementById("dashboardEmail"),
+    dashboardCreditsSpan = document.getElementById("dashboardCredits"),
+    chatContainer = document.getElementById("chatContainer"),
+    forumContainer = document.getElementById("forumContainer"),
+    chatMessagesDiv = document.getElementById("chatMessages");
 
   document.getElementById("dashboardBtn").addEventListener("click", async () => {
     const user = firebase.auth().currentUser;
@@ -360,8 +360,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
   document.getElementById("uploadPicBtn").addEventListener("click", async () => {
     const file = document.getElementById("profilePicInput").files[0],
-          user = firebase.auth().currentUser,
-          profilePicImg = document.getElementById("profilePic");
+      user = firebase.auth().currentUser,
+      profilePicImg = document.getElementById("profilePic");
     if (!file) {
       alert("Select an image file.");
       return;
@@ -417,12 +417,12 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   const forumInput = document.getElementById("forumInput"),
-        forumSubmit = document.getElementById("forumSubmit"),
-        forumPostsContainer = document.getElementById("forumPosts");
+    forumSubmit = document.getElementById("forumSubmit"),
+    forumPostsContainer = document.getElementById("forumPosts");
 
   forumSubmit.addEventListener("click", async () => {
     const text = forumInput.value.trim(),
-          user = firebase.auth().currentUser;
+      user = firebase.auth().currentUser;
     if (!text) {
       alert("Cannot send an empty post.");
       return;
@@ -433,7 +433,7 @@ document.addEventListener("DOMContentLoaded", function() {
       return;
     }
     let fileUrl = "",
-        fileType = "";
+      fileType = "";
     try {
       const file = document.getElementById("forumFile").files[0];
       if (file) {
@@ -476,8 +476,8 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
   const chatSendBtn = document.getElementById("chatSendBtn"),
-        typingLoader = document.getElementById("typingLoader"),
-        typingStatusCollection = firestore.collection("typingStatus");
+    typingLoader = document.getElementById("typingLoader"),
+    typingStatusCollection = firestore.collection("typingStatus");
   let typingTimeout;
   let chatLimit = 20;
   let chatUnsubscribe;
@@ -528,7 +528,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   loadChatMessages();
 
-  chatMessagesDiv.addEventListener("scroll", function() {
+  chatMessagesDiv.addEventListener("scroll", function () {
     if (chatMessagesDiv.scrollTop === 0) {
       chatLimit += 20;
       loadChatMessages();
@@ -554,7 +554,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  chatInput.addEventListener("keydown", function(e) {
+  chatInput.addEventListener("keydown", function (e) {
     if ((e.key === "Enter" || e.keyCode === 13) && !e.shiftKey) {
       e.preventDefault();
       chatSendBtn.click();
@@ -581,7 +581,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   document.getElementById("emojiToggle").addEventListener("click", () => {
     const emojiPicker = document.getElementById("emojiPicker"),
-          stickerPicker = document.getElementById("stickerPicker");
+      stickerPicker = document.getElementById("stickerPicker");
     emojiPicker.style.display = (emojiPicker.style.display === "block") ? "none" : "block";
     stickerPicker.style.display = "none";
   });
@@ -594,7 +594,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     if (!stickerPicker.innerHTML.trim()) {
       const apiKey = "1FQEo2nvaarypzmTvT0RY5leH7w33EXA",
-            url = `https://api.giphy.com/v1/stickers/trending?api_key=${apiKey}&limit=100&rating=g`;
+        url = `https://api.giphy.com/v1/stickers/trending?api_key=${apiKey}&limit=100&rating=g`;
       try {
         const result = await (await fetch(url)).json();
         if (result.data) {
@@ -622,9 +622,9 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("stickerPicker").addEventListener("click", async (e) => {
     if (e.target.tagName.toLowerCase() === "img") {
       const stickerUrl = e.target.dataset.sticker,
-            user = firebase.auth().currentUser,
-            userName = user ? (user.displayName || (user.email ? user.email.split("@")[0] : "Guest")) : "Guest",
-            photoURL = user ? user.photoURL || "" : "";
+        user = firebase.auth().currentUser,
+        userName = user ? (user.displayName || (user.email ? user.email.split("@")[0] : "Guest")) : "Guest",
+        photoURL = user ? user.photoURL || "" : "";
       try {
         await firestore.collection("chats").add({
           uid: user ? user.uid : null,
@@ -649,9 +649,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
   chatSendBtn.addEventListener("click", async () => {
     const messageText = chatInput.value.trim(),
-          user = firebase.auth().currentUser,
-          userName = user ? (user.displayName || (user.email ? user.email.split("@")[0] : "Guest")) : "Guest",
-          photoURL = user ? user.photoURL || "" : "";
+      user = firebase.auth().currentUser,
+      userName = user ? (user.displayName || (user.email ? user.email.split("@")[0] : "Guest")) : "Guest",
+      photoURL = user ? user.photoURL || "" : "";
     if (!messageText) {
       alert("Cannot send an empty message.");
       return;
@@ -662,7 +662,7 @@ document.addEventListener("DOMContentLoaded", function() {
       return;
     }
     let fileUrl = "",
-        fileType = "";
+      fileType = "";
     try {
       const file = document.getElementById("chatFile").files[0];
       if (file) {
@@ -697,7 +697,7 @@ document.addEventListener("DOMContentLoaded", function() {
       // This listener is not used for pagination (see loadChatMessages)
     });
 
-  document.addEventListener("click", async function(e) {
+  document.addEventListener("click", async function (e) {
     // Delete forum post
     if (e.target.classList.contains("delete-forum-post")) {
       const id = e.target.getAttribute("data-doc-id");
@@ -723,7 +723,7 @@ document.addEventListener("DOMContentLoaded", function() {
         await logSecurityEvent("delete_error", `Error deleting forum post: ${err.message}`);
       }
     }
-    
+
     if (e.target.classList.contains("delete-chat-post")) {
       const id = e.target.getAttribute("data-doc-id");
       if (!confirm("Are you sure you want to delete this chat message?")) return;
@@ -750,51 +750,57 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  document.addEventListener("click", (e) => {
-    if (e.target.classList.contains("mention")) {
-      const mentionedUser = e.target.getAttribute("data-user");
-      alert(`You clicked on mention: @${mentionedUser}`);
-    }
-  });
-  loadChatMessages();
+  
+});
 
-  // ------------------------------
-  // Image Overlay Functionality
-  // ------------------------------
-  function openImageOverlay(imageUrl) {
-    let overlay = document.getElementById("imgOverlay");
-    if (!overlay) {
-      overlay = document.createElement("div");
-      overlay.id = "imgOverlay";
-      overlay.style.position = "fixed";
-      overlay.style.top = "0";
-      overlay.style.left = "0";
-      overlay.style.width = "100%";
-      overlay.style.height = "100%";
-      overlay.style.backgroundColor = "rgba(0,0,0,0.8)";
-      overlay.style.display = "flex";
-      overlay.style.alignItems = "center";
-      overlay.style.justifyContent = "center";
-      overlay.style.zIndex = "9999";
-      overlay.style.cursor = "pointer";
-      document.body.appendChild(overlay);
-      overlay.addEventListener("click", () => {
-        overlay.style.display = "none";
-      });
-    }
-    overlay.innerHTML = `<img src="${imageUrl}" style="max-width:90%; max-height:90%;">`;
-    overlay.style.display = "flex";
+
+
+
+
+document.addEventListener("click", (e) => {
+  if (e.target.classList.contains("mention")) {
+    const mentionedUser = e.target.getAttribute("data-user");
+    alert(`You clicked on mention: @${mentionedUser}`);
   }
+});
+loadChatMessages();
 
-  // Event delegation for image overlay links.
-  document.addEventListener("click", function(e) {
-    const target = e.target.closest(".img-overlay-link");
-    if (target) {
-      e.preventDefault();
-      const imageUrl = target.dataset.image ? decodeURIComponent(target.dataset.image) : "";
-      if (imageUrl) {
-        openImageOverlay(imageUrl);
-      }
+// ------------------------------
+// Image Overlay Functionality
+// ------------------------------
+function openImageOverlay(imageUrl) {
+  let overlay = document.getElementById("imgOverlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "imgOverlay";
+    overlay.style.position = "fixed";
+    overlay.style.top = "0";
+    overlay.style.left = "0";
+    overlay.style.width = "100%";
+    overlay.style.height = "100%";
+    overlay.style.backgroundColor = "rgba(0,0,0,0.8)";
+    overlay.style.display = "flex";
+    overlay.style.alignItems = "center";
+    overlay.style.justifyContent = "center";
+    overlay.style.zIndex = "9999";
+    overlay.style.cursor = "pointer";
+    document.body.appendChild(overlay);
+    overlay.addEventListener("click", () => {
+      overlay.style.display = "none";
+    });
+  }
+  overlay.innerHTML = `<img src="${imageUrl}" style="max-width:90%; max-height:90%;">`;
+  overlay.style.display = "flex";
+}
+
+// Event delegation for image overlay links.
+document.addEventListener("click", function (e) {
+  const target = e.target.closest(".img-overlay-link");
+  if (target) {
+    e.preventDefault();
+    const imageUrl = target.dataset.image ? decodeURIComponent(target.dataset.image) : "";
+    if (imageUrl) {
+      openImageOverlay(imageUrl);
     }
-  });
+  }
 });
