@@ -528,6 +528,26 @@
       cursor: pointer;
     }
 
+    @keyframes pop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.chat-message {
+  animation: pop 0.4s ease-out;
+}
+
+
+
     @media (max-width: 400px) {
       .content {
         padding: 5px;
@@ -676,15 +696,22 @@
       style="display: flex; flex-direction: column; justify-content: center; max-height: 400px;">
       <button class="modal-close" id="closeUpdatesModal"><i class="ri-close-fill"></i></button>
       <h2>Latest Updates</h2>
-      <ul class="updates-list" id="updatesList"></ul>
+      <ul class="updates-list" id="updatesList">
+        <li>This application employs a multi-layered security model:</li>
+        <li>Database-level protections include firewalls that deny access by default.
+          Only specific, approved applications can access the database, and outbound
+          connections are blocked unless explicitly needed.</li>
+        <p>Direct database access is strictly limited. Changes to firewall rules are
+          governed by change management procedures and trigger security alerts.</p>
+      </ul>
     </div>
   </div>
   <button id="updatesBtn">
     Updates
-    <span id="updateIndicator" style="display:none; background:red; border-radius:50%; width:10px; height:10px; position:absolute; top:0; right:0;"></span>
+    <span id="updateIndicator"
+      style="display:none; background:red; border-radius:50%; width:10px; height:10px; position:absolute; top:0; right:0;"></span>
   </button>
-  
-  <!-- Image Overlay -->
+
   <div id="imageOverlay" class="overlay">
     <span id="closeOverlay">&times;</span>
     <img id="overlayImage" class="overlay-content">
